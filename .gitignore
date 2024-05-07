@@ -1,0 +1,7 @@
+# archive files
+*.tar
+*.tar.gz
+*.zip
+
+# json files
+*.json
