@@ -7,6 +7,10 @@
 
 import os
 import sys
+from bs4 import BeautifulSoup
+from index.tokenize import tokenize
+from json import *
+from index.posting import Posting
 
 USAGE_MSG = "usage: python makeindex.py pages/ outputfile"
 
@@ -20,12 +24,25 @@ def main(dir, fh):
     :param fh: The output file handler
 
     """
-    # read json files from directory and write to output file
-    for root, dirs, files in os.walk(dir):
+    inverted_index = {}
+    docID = 0
+
+    # Walk through the directory and parse json files
+    for root, _, files in os.walk(dir):
         for file in files:
             if file.endswith(".json"):
-                with open(os.path.join(root, file), "r", encoding="utf-8") as f:
-                    fh.write(f.read())
+                docID += 1
+                path = os.path.join(root, file)
+                with open(path, 'r', encoding='utf-8') as f:
+                    js = load(f)
+                    content = js['content']
+                    soup = BeautifulSoup(content, 'html.parser')
+                    text = soup.get_text()
+                    tokens = tokenize(text)
+
+    # Write the inverted index to the file handler
+    for token, doc_freq in inverted_index.items():
+        fh.write(f"{token}: {doc_freq}\n")
 
 if __name__ == "__main__":
     try:
@@ -37,4 +54,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     main(dir, fh)
+    fh.close()
 
