@@ -20,8 +20,12 @@ def main(dir, fh):
     :param fh: The output file handler
 
     """
-    fh.write("TODO")
-
+    # read json files from directory and write to output file
+    for root, dirs, files in os.walk(dir):
+        for file in files:
+            if file.endswith(".json"):
+                with open(os.path.join(root, file), "r", encoding="utf-8") as f:
+                    fh.write(f.read())
 
 if __name__ == "__main__":
     try:

@@ -1,12 +1,8 @@
-# helpers/tokenize.py
+# tokenize.py
 #
 # custom tokenizer for handling words in pages
 # somtimes treats certain symbols as part of the token
 # also handles contractions too
-
-from helpers.contra_set import is_contraction
-from helpers.stopwords_set import STOPWORDS_SET
-
 
 # symbols (non-alnum chars) that are in this set will not split the token and
 # instead be included in the token
