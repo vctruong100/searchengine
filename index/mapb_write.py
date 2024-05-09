@@ -21,7 +21,7 @@ def _encode_i32(i):
     """
     seq = bytearray()
     seq.append(0x01)
-    seq.extend(i.to_bytes(4, "little"))
+    seq.extend(i.to_bytes(4, "little", signed=True))
     return bytes(seq)
 
 
@@ -70,8 +70,8 @@ def write_index(index, num_docs, fh):
     header_mmap = bytearray()
     header_mmap.append(0)
     header_mmap.extend(b"\0\0\0\0\0\0\0")
-    header_mmap.extend(num_docs.to_bytes(8, "little"))
-    header_mmap.extend(len(index.keys()).to_bytes(8, "little"))
+    header_mmap.extend(num_docs.to_bytes(8, "little", signed=False))
+    header_mmap.extend(len(index.keys()).to_bytes(8, "little", signed=False))
 
     # Reference chunk
     # Sequence of key,value pairs
@@ -95,21 +95,21 @@ def write_index(index, num_docs, fh):
     for word in sorted(index.keys()):
         # Append word as key
         word_seq = _encode_str(word)
-        ref_mmap.extend(data_offset.to_bytes(4, "little"))
-        ref_mmap.extend(len(word_seq).to_bytes(4, "little"))
+        ref_mmap.extend(data_offset.to_bytes(4, "little", signed=False))
+        ref_mmap.extend(len(word_seq).to_bytes(4, "little", signed=False))
         data_mmap.extend(word_seq)
         data_offset += len(word_seq)
 
-        # Append list of postings as key
+        # Append list of postings as value
         postings_seq = _encode_list_postings(index[word])
-        ref_mmap.extend(data_offset.to_bytes(4, "little"))
-        ref_mmap.extend(len(postings_seq).to_bytes(4, "little"))
+        ref_mmap.extend(data_offset.to_bytes(4, "little", signed=False))
+        ref_mmap.extend(len(postings_seq).to_bytes(4, "little", signed=False))
         data_mmap.extend(postings_seq)
         data_offset += len(postings_seq)
 
     # Finalize header data
-    header_mmap.extend(len(ref_mmap).to_bytes(8, "little"))
-    header_mmap.extend(len(data_mmap).to_bytes(8, "little"))
+    header_mmap.extend(len(ref_mmap).to_bytes(8, "little", signed=False))
+    header_mmap.extend(len(data_mmap).to_bytes(8, "little", signed=False))
 
     # Write header, refs, and data chunks sequentially
     fh.write(header_mmap)
