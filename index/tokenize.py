@@ -61,17 +61,6 @@ def tokenize(text):
         # lowercase only
         token = token.lower()
 
-        # token is a stopword
-        # ignore it
-        if token in STOPWORDS_SET:
-            continue
-
-        # token is a contraction
-        # add it without processing
-        if is_contraction(token):
-            processed.append(token)
-            continue
-
         # process token grapheme-by-grapheme
         # for loop over strings will loop over graphemes (not by byte/char)
         # when non-alnum or non-GROUP SYMBOL hit, split word
