@@ -50,23 +50,28 @@ def _encode_list_postings(postings):
     return bytes(seq)
 
 
-def write_index(index, fh):
+def write_index(index, num_docs, fh):
     """Writes the index to file.
     Keys are sorted lexicographically.
     The index consists of tokens mapped to a list of Postings.
 
     :param index dict[str, list[Posting]]: The inverted index as a hash map
+    :param num_docs int: The number of documents
     :param fh: The file handler
     """
 
     # Header chunk
     #   - version: 1 byte
     #   - [7 bytes reserved]
+    #   - num_docs: 8 bytes
+    #   - num_tokens: 8 bytes
     #   - refsize: 8 bytes
     #   - datasize: 8 bytes
     header_mmap = bytearray()
     header_mmap.append(0)
     header_mmap.extend(b"\0\0\0\0\0\0\0")
+    header_mmap.extend(num_docs.to_bytes(8, "little"))
+    header_mmap.extend(len(index.keys()).to_bytes(8, "little"))
 
     # Reference chunk
     # Sequence of key,value pairs
