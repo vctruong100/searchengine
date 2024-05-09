@@ -4,13 +4,14 @@
 # from a collection of web pages
 #
 # usage: python makeindex.py pages/ outputfile
-
 import os
 import sys
 from bs4 import BeautifulSoup
 from index.tokenize import tokenize
-from json import *
+from json import load
 from index.posting import Posting
+from index.mapb_write import write_index
+from index.word_count import word_count
 
 USAGE_MSG = "usage: python makeindex.py pages/ outputfile"
 
@@ -27,22 +28,34 @@ def main(dir, fh):
     inverted_index = {}
     docID = 0
 
-    # Walk through the directory and parse json files
+    # recursively walk through the directory
     for root, _, files in os.walk(dir):
         for file in files:
             if file.endswith(".json"):
                 docID += 1
                 path = os.path.join(root, file)
                 with open(path, 'r', encoding='utf-8') as f:
+
+                    # load the json file
                     js = load(f)
                     content = js['content']
                     soup = BeautifulSoup(content, 'lxml')
                     text = soup.get_text()
                     tokens = tokenize(text)
+                    token_counts = word_count(tokens)
 
-    # Write the inverted index to the file handler
-    for token, doc_freq in inverted_index.items():
-        fh.write(f"{token}: {doc_freq}\n")
+                    # Iterate over each token and its count and add a Posting to the inverted index
+                    for token, count in token_counts.items():
+                        if token not in inverted_index:
+                            inverted_index[token] = []
+                        inverted_index[token].append(Posting(docid=docID, score=count))
+
+    # Iterate over postings in inverted index and sort them by document ID
+    for postings in inverted_index.values():
+        postings.sort(key=lambda x: x.docid)
+
+    write_index(inverted_index, docID, fh)
+
 
 if __name__ == "__main__":
     try:
@@ -55,4 +68,6 @@ if __name__ == "__main__":
 
     main(dir, fh)
     fh.close()
+
+
 
