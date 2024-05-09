@@ -36,7 +36,7 @@ def main(dir, fh):
                 with open(path, 'r', encoding='utf-8') as f:
                     js = load(f)
                     content = js['content']
-                    soup = BeautifulSoup(content, 'html.parser')
+                    soup = BeautifulSoup(content, 'lxml')
                     text = soup.get_text()
                     tokens = tokenize(text)
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     try:
         dir = sys.argv[1]
         assert os.path.isdir(dir), USAGE_MSG
-        fh = open(sys.argv[2], "w", encoding="utf-8")
+        fh = open(sys.argv[2], "wb")
     except:
         print(USAGE_MSG)
         sys.exit(1)
