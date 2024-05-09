@@ -3,21 +3,30 @@
 # posting class
 
 class Posting:
-    size = 12
-
-    def __init__(self, docid, score, fields=dict()):
-        self.docid = id
+    def __init__(self, docid=None, score=None, fields=dict()):
+        self.docid = docid
         self.score = score
         self.fields = fields
 
-    @staticmethod
-    def read(cls, fh):
+    def decode(self, seq):
+        """Updates the Posting object based on the bytes.
+        """
         posting = cls.__new__(cls)
-        posting.docid = int.from_bytes(fh.read(8), "little")
-        posting.score = int.from_bytes(fh.read(4), "little")
         posting.fields = dict()
 
-    def write(self, fh):
-        fh.write(int.to_bytes(self.docid, 8, "little")
-        fh.write(int.to_bytes(self.score, 4, "little")
+        # docid, score
+        posting.docid = int.from_bytes(seq[:8], "little")
+        posting.score = int.from_bytes(seq[8:12], "little")
+
+    def encode(self):
+        """Returns the Posting in bytes.
+        """
+        docid = self.docid
+        score = self.score
+
+        seq = bytearray()
+        seq.extend(docid.to_bytes(8, "little"))
+        seq.extend(score.to_bytes(4, "little"))
+
+        return bytes(seq)
 
