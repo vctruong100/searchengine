@@ -1,3 +1,6 @@
+# cache files
+__pycache__/
+
 # archive files
 *.tar
 *.tar.gz
