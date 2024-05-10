@@ -14,6 +14,7 @@ from index.word_count import word_count
 from index.mapb_write import write_index
 from collections import defaultdict #  to simplify and speed up the insertion of postings
 import time
+from nltk.stem import PorterStemmer
 
 USAGE_MSG = "usage: python makeindex.py pages/ outputfile"
 
@@ -30,6 +31,7 @@ def main(dir, fh):
 
     inverted_index = defaultdict(list)
     docID = 0
+    stemmer = PorterStemmer()
 
     # recursively walk through the directory
     for root, _, files in os.walk(dir):
@@ -51,7 +53,11 @@ def main(dir, fh):
 
                     text = soup.get_text()
                     tokens = tokenize(text)
-                    token_counts = word_count(tokens)
+
+                    # Stem the tokens using the Porter Stemmer
+                    # https://www.geeksforgeeks.org/python-stemming-words-with-nltk/
+                    stemmed_tokens = [stemmer.stem(token) for token in tokens]
+                    token_counts = word_count(stemmed_tokens)
 
                     # Iterate over each token and its count and add a Posting to the inverted index
                     for token, count in token_counts.items():
@@ -62,7 +68,7 @@ def main(dir, fh):
     print(f"Number of documents: {docID}")
     print(f"Number of unique words: {num_unique_words}")
 
-    write_index(inverted_index, docID, fh)
+    # write_index(inverted_index, docID, fh)
 
     end_time = time.time()  # Capture the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time
