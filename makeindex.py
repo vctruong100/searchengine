@@ -4,6 +4,7 @@
 # from a collection of web pages
 #
 # usage: python makeindex.py pages/ outputfile
+
 import os
 import sys
 from bs4 import BeautifulSoup
@@ -49,7 +50,7 @@ def main(dir, fh):
                     if not content.strip():
                         continue
 
-                    soup = BeautifulSoup(content, 'html.parser')
+                    soup = BeautifulSoup(content, 'lxml')
 
                     text = soup.get_text()
                     tokens = tokenize(text)
