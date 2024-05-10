@@ -62,7 +62,7 @@ def main(dir, fh):
 
                     # Iterate over each token and its count and add a Posting to the inverted index
                     for token, count in token_counts.items():
-                        posting = Posting(docid=docID, score=count)
+                        posting = Posting(docid=docID, tfidf=count)
                         inverted_index[token].append(posting)
 
     num_unique_words = len(inverted_index)
