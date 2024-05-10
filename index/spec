@@ -1,0 +1,68 @@
+Index file format
+=================
+
+There are 2 kinds of index file formats: `partial` and `merged`.
+
+The `partial` format represents an incomplete inverted index as a sequence of 
+partial indices.
+
+The `merged` format represents a complete inverted index with all partial 
+indices from the `partial` format merged together as one.
+
+
+Partial
+=======
+
+The header of the partial format is written as such:
+```
+struct partial_header {
+    u32 partcnt;
+    u64 highest_docid;
+};
+```
+
+`partcnt` refers to the amount of inverted indices on file. Each time a new 
+partial index is written to, this increments by 1.
+
+`highest_docid` refers to the highest document ID stored across all inverted 
+indices on file. Typically, this is supplied by the user when the user calls
+`write_partial_index(...)`.
+
+
+A sequence of key-value maps follows after the header. Each key-value map must 
+write its keys in lexicographic order sequentially. A map is written as such:
+```
+struct str {
+    u32 len;
+    char[] buf;
+};
+
+struct partial_key_val_pair {
+    struct str key;
+    u32 postings_size;
+    Posting[] postings;
+};
+
+struct partial_key_val_map {
+    u32 map_size;
+    struct partial_key_val_pair[] pairs;
+};
+```
+
+We define a string as a `struct str` with a `u32` for its length followed by a 
+sequence of `char` with the length based on its length.
+
+We define a list of postings with the size that it occupies in bytes as `u32` 
+followed by a byte sequence representing many Posting objects. Posting objects 
+are encoded to bytes using the `Posting.encode()` method.
+
+The key-value map is defined as a sequence of key-value pairs prepended by the 
+size it occupies in bytes. Note that a map is always a mapping of strings to a 
+list of Postings.
+
+
+Merged
+========
+
+TODO
+
