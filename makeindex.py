@@ -12,7 +12,7 @@ from index.tokenize import tokenize
 from json import load
 from index.posting import Posting
 from index.word_count import word_count
-from index.mapb_write import write_index
+from index.writer import write_partial_index
 from collections import defaultdict #  to simplify and speed up the insertion of postings
 import time
 from nltk.stem import PorterStemmer
@@ -33,6 +33,8 @@ def main(dir, fh):
     inverted_index = defaultdict(list)
     docID = 0
     stemmer = PorterStemmer()
+    doc_limit = 100  # cutoff point for partial index writing
+    unique_words = set()
 
     # recursively walk through the directory
     for root, _, files in os.walk(dir):
@@ -64,8 +66,18 @@ def main(dir, fh):
                     for token, count in token_counts.items():
                         posting = Posting(docid=docID, tfidf=count)
                         inverted_index[token].append(posting)
+                        unique_words.add(token)
 
-    num_unique_words = len(inverted_index)
+
+                # Periodically write the partial index to disk
+                if docID % doc_limit == 0: # write for every 100 documents
+                    write_partial_index(inverted_index, docID, fh)
+
+    # Final write for any remaining documents
+    if inverted_index:
+        write_partial_index(inverted_index, docID, fh)
+
+    num_unique_words = len(unique_words)
     print(f"Number of documents: {docID}")
     print(f"Number of unique words: {num_unique_words}")
 
@@ -79,7 +91,7 @@ if __name__ == "__main__":
     try:
         dir = sys.argv[1]
         assert os.path.isdir(dir), USAGE_MSG
-        fh = open(sys.argv[2], "wb")
+        fh = open(sys.argv[2], "r+b")
     except:
         print(USAGE_MSG)
         sys.exit(1)
