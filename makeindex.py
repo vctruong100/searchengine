@@ -38,8 +38,8 @@ def main(dir, fh):
 
                     # load the json file
                     js = load(f)
-                    content = js['content']
-                    soup = BeautifulSoup(content, 'lxml')
+                    content = js.get('content', '')
+                    soup = BeautifulSoup(content, 'html.parser')
                     text = soup.get_text()
                     tokens = tokenize(text)
                     token_counts = word_count(tokens)
@@ -48,14 +48,10 @@ def main(dir, fh):
                     for token, count in token_counts.items():
                         if token not in inverted_index:
                             inverted_index[token] = []
-                        inverted_index[token].append(Posting(docid=docID, score=count))
-
-    # Iterate over postings in inverted index and sort them by document ID
-    for postings in inverted_index.values():
-        postings.sort(key=lambda x: x.docid)
+                        posting = Posting(docid=docID, score=count)
+                        inverted_index[token].append(posting)
 
     write_index(inverted_index, docID, fh)
-
 
 if __name__ == "__main__":
     try:
