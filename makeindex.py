@@ -51,7 +51,10 @@ def main(dir, fh):
                         posting = Posting(docid=docID, score=count)
                         inverted_index[token].append(posting)
 
-    write_index(inverted_index, docID, fh)
+    num_unique_words = len(inverted_index)
+    print(f"Number of documents: {docID}")
+    print(f"Number of unique words: {num_unique_words}")
+
 
 if __name__ == "__main__":
     try:
@@ -65,5 +68,6 @@ if __name__ == "__main__":
     main(dir, fh)
     fh.close()
 
-
+    file_size = os.path.getsize(sys.argv[2]) / 1024
+    print(f"Total size of the index on disk: {file_size:.2f} KB")
 
