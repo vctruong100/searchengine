@@ -169,11 +169,12 @@ def merge_index(partfh, fh):
             byteorder="little",
             signed=False
         )
+        if map_size <= 0:
+            continue
         map_fh = open(partfh.name, "rb")
         map_fh.seek(partfh.tell(), 0)
-        if map_size > 0:
-            indices.append((map_size, map_fh))
         partfh.seek(map_size, 1)
+        indices.append((map_size, map_fh))
 
     # initialize key priority queue
     for ipos in range(len(indices)):
@@ -267,7 +268,6 @@ def merge_index(partfh, fh):
         fh.write(data_mmap)
 
     # update and write headers
-    # then mark as success
     header_mmap = bytearray()
     header_mmap.append(0)
     header_mmap.extend(b"\0\0\0\0\0\0\0")
@@ -283,6 +283,11 @@ def merge_index(partfh, fh):
     ))
     fh.seek(0, 0)
     fh.write(header_mmap)
+
+    # close temporary file handlers created by the function
+    # then return True
+    for ind in indices:
+        ind[1].close()
     return True
 
 
