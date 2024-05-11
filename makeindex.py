@@ -16,12 +16,10 @@ from index.writer import write_partial_index, merge_index
 from collections import defaultdict #  to simplify and speed up the insertion of postings
 import time
 from nltk.stem import PorterStemmer
-import tempfile # for temporary file creation
-
 
 USAGE_MSG = "usage: python makeindex.py pages/ outputfile"
 
-def main(dir, tempfh, outputfh):
+def main(dir, fh):
     """Makes the index from a collection of
     cached pages recursively from the directory (dir).
     Writes the output to the file handler (fh).
@@ -35,14 +33,14 @@ def main(dir, tempfh, outputfh):
     docID = 0
     stemmer = PorterStemmer()
     doc_limit = 100  # cutoff point for partial index writing
+    unique_words = set()
+    partial_fh = fh + ".part"
 
     # recursively walk through the directory
     for root, _, files in os.walk(dir):
         for file in files:
             if file.endswith(".json"):
                 docID += 1
-                print(f"Document ID: {docID}", flush=True)
-
                 path = os.path.join(root, file)
                 with open(path, 'r', encoding='utf-8') as f:
 
@@ -68,27 +66,25 @@ def main(dir, tempfh, outputfh):
                     for token, count in token_counts.items():
                         posting = Posting(docid=docID, tfidf=count)
                         inverted_index[token].append(posting)
+                        unique_words.add(token)
 
                 # Periodically write the partial index to disk
                 if docID % doc_limit == 0: # write for every 100 documents
-                    write_partial_index(inverted_index, docID, tempfh)
+                    with open(partial_fh, "a+b") as part_fh:
+                        write_partial_index(inverted_index, docID, part_fh)
 
     # Final write for any remaining documents
     if inverted_index:
-        write_partial_index(inverted_index, docID, tempfh)
+        with open(partial_fh, "a+b") as part_fh:
+            write_partial_index(inverted_index, docID, part_fh)
 
+    num_unique_words = len(unique_words)
     print(f"Number of documents: {docID}")
+    print(f"Number of unique words: {num_unique_words}")
 
-    # Merge the partial indices into the final output file
-    merge_index(tempfh, outputfh)
-
-    # Read the keycnt field from the merged index file to get the number of unique words
-    outputfh.seek(16)  # keycnt is located at the 16th byte offset
-
-    # convert the read bytes to an unsigned integer
-    # byteorder="little" - data is stored in little-endian format, least significant byte (the "little end") comes first
-    keycnt = int.from_bytes(outputfh.read(8), byteorder="little", signed=False)
-    print(f"Number of unique words: {keycnt}")
+    with open(fh, "w+b") as out_fh:
+        with open(partial_fh, "r+b") as part_fh:
+            merge_index(part_fh, out_fh)
 
     end_time = time.time()  # Capture the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time
@@ -98,16 +94,15 @@ if __name__ == "__main__":
     try:
         dir = sys.argv[1]
         assert os.path.isdir(dir), USAGE_MSG
-
-        with tempfile.NamedTemporaryFile(delete=True) as tempfh:  # Create a temporary file with automatic deletion
-            outputfh = open(sys.argv[2], "w+b")
-            main(dir, tempfh, outputfh)
-            tempfh.close()
-            outputfh.close()
-
-            file_size = os.path.getsize(sys.argv[2]) / 1024
-            print(f"Total size of the index on disk: {file_size:.2f} KB")
-    except:
+        fh = open(sys.argv[2], "w+b")
+    except Exception as e:
         print(USAGE_MSG)
+        print("Error:", e)
         sys.exit(1)
+
+    main(dir, fh)
+    fh.close()
+
+    file_size = os.path.getsize(sys.argv[2]) / 1024
+    print(f"Total size of the index on disk: {file_size:.2f} KB")
 
