@@ -33,14 +33,15 @@ def main(dir, fh):
     docID = 0
     stemmer = PorterStemmer()
     doc_limit = 100  # cutoff point for partial index writing
-    unique_words = set()
-    partial_fh = fh + ".part"
+    partial_fh = f"{fh.name}.part"
 
     # recursively walk through the directory
     for root, _, files in os.walk(dir):
         for file in files:
             if file.endswith(".json"):
                 docID += 1
+                print(f"Document ID: {docID}", flush=True)
+
                 path = os.path.join(root, file)
                 with open(path, 'r', encoding='utf-8') as f:
 
@@ -66,25 +67,30 @@ def main(dir, fh):
                     for token, count in token_counts.items():
                         posting = Posting(docid=docID, tfidf=count)
                         inverted_index[token].append(posting)
-                        unique_words.add(token)
 
                 # Periodically write the partial index to disk
                 if docID % doc_limit == 0: # write for every 100 documents
-                    with open(partial_fh, "a+b") as part_fh:
+                    with open(partial_fh, 'w+b') as part_fh:
                         write_partial_index(inverted_index, docID, part_fh)
 
     # Final write for any remaining documents
     if inverted_index:
-        with open(partial_fh, "a+b") as part_fh:
+        with open(partial_fh, 'w+b') as part_fh:
             write_partial_index(inverted_index, docID, part_fh)
 
-    num_unique_words = len(unique_words)
-    print(f"Number of documents: {docID}")
-    print(f"Number of unique words: {num_unique_words}")
+    with open(f"{fh.name}.part", 'r+b') as part_fh:
+        merge_index(part_fh, fh)
 
-    with open(fh, "w+b") as out_fh:
-        with open(partial_fh, "r+b") as part_fh:
-            merge_index(part_fh, out_fh)
+    print(f"Number of documents: {docID}")
+
+    # Read the keycnt field from the merged index file to get the number of unique words
+    fh.seek(16)  # keycnt is located at the 16th byte offset
+
+    # convert the read bytes to an unsigned integer
+    # byteorder="little" - data is stored in little-endian format, least significant byte (the "little end") comes first
+    keycnt = int.from_bytes(fh.read(8), byteorder="little", signed=False)
+    print(f"Number of unique words: {keycnt}")
+
 
     end_time = time.time()  # Capture the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time
