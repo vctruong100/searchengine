@@ -13,12 +13,12 @@ def _struct_str(s):
         char[] buf;
     };
     """
-    slen = len(s).to_bytes(
+    sbuf = s.encode("utf-8")
+    slen = len(sbuf).to_bytes(
         4,
         byteorder="little",
         signed=False
     )
-    sbuf = s.encode("utf-8")
     return slen + sbuf
 
 
