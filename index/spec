@@ -62,7 +62,54 @@ list of Postings.
 
 
 Merged
-========
+======
 
-TODO
+The `merged` is similar to the `partial` format but with a different header.
+The header is defined as such:
+```
+struct merged_header {
+    u8 version;
+    char[7] reserved_00;
+    u64 docid;
+    u64 keycnt;
+    u64 reserved_01;
+};
+```
+
+Note that the `reserved_00` and `reserved_01` fields indicate reserved bits. 
+They are respectively 56 bits and 64 bits.
+
+`version` indicates what the version of the file format. This is set to `0`.
+
+`docid` represents the highest document ID across the entire mapping.
+
+`keycnt` represents the number of unique keys across the entire mapping. You 
+could also call this the unique token count.
+
+
+A single key-value map follows after the header. It is written as such:
+```
+struct str {
+    u32 len;
+    char[] buf;
+};
+
+struct merged_key_value_pair {
+    struct str key;
+    u32 postings_size;
+    Posting[] postings;
+};
+
+struct merged_key_value_map {
+    u32 map_size;
+    struct merged_key_value_pair[] pairs;
+};
+```
+
+Note that the pair and map structs are the same as the `partial` format.
+
+In fact, you can trivially convert a `merged` format into a `partial` format by 
+taking the mapping in bytes and prepending a new header such that `partcnt=1` 
+and `docid=merged_header.docid`.
+
 

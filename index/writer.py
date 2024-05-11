@@ -3,7 +3,8 @@
 # writes to inverted index
 # see index/spec
 
-from os import dup
+from queue import PriorityQueue
+from index.posting import Posting
 
 
 def _struct_str(s):
@@ -128,13 +129,158 @@ def write_partial_index(index, docid, fh):
 
 
 def merge_index(partfh, fh):
-    """Merges k-way using a sequence of partial indices from `partfh`.
-    The output is written as a sequence of pages to `fh`.
+    """Merges k-way using a sequence of partial sorted indices from `partfh`.
+    The output is written to `fh` as a merged key-value map that is sorted.
 
     `partfh` must be seekable.
 
     If `partfh` and `fh` refer to the same file, merging behavior is undefined.
 
+    Returns True if it succeeds.
     """
-    pass
+    assert partfh.seekable(), "partfh is not seekable"
+
+    partcnt, docid = _get_header(partfh)
+
+    # reserve 32 bytes for header
+    fh.seek(32, 0)
+
+    # internal header variables
+    keycnt = 0
+
+    # different file handlers for each partial index
+    # each element is a 2-tuple: (size, fh)
+    indices = []
+
+    # key priority queue
+    key_pq = PriorityQueue(maxsize=partcnt)
+
+    # val priority queue
+    # for use in determining the
+    # min element within the list of Postings
+    val_pq = PriorityQueue()
+
+    # create file handlers for each partial index on disk
+    for i in range(partcnt):
+        map_size = int.from_bytes(
+            partfh.read(4),
+            byteorder="little",
+            signed=False
+        )
+        map_fh = open(partfh.name, "rb")
+        map_fh.seek(partfh.tell(), 0)
+        if map_size > 0:
+            indices.append((map_size, map_fh))
+        partfh.seek(map_size, 1)
+
+    # initialize key priority queue
+    for ipos in range(len(indices)):
+        map_size, map_fh = indices[ipos]
+        ksize = int.from_bytes(
+            map_fh.read(4),
+            byteorder="little",
+            signed=False
+        )
+        key = map_fh.read(ksize).decode("utf-8")
+        indices[ipos] = (map_size - 4 - ksize, map_fh)
+        key_pq.put(
+            (key, ipos),
+            block=False
+        )
+
+    # empty the key priority queue
+    data_key = None
+    data_mmap = bytearray()
+    while not key_pq.empty():
+        key, ipos = key_pq.get(block=False)
+
+        if key != data_key:
+            if data_key:
+                # write the key-val pair to disk before
+                # changing the key reference
+                fh.write(_struct_str(data_key))
+                while not val_pq.empty():
+                    posting = val_pq.get(block=False)
+                    data_mmap.extend(posting.encode())
+                fh.write(len(data_mmap).to_bytes(
+                    4,
+                    byteorder="little",
+                    signed=False
+                ))
+                fh.write(data_mmap)
+
+            # update references
+            data_key = key
+            data_mmap = bytearray()
+            keycnt += 1
+
+        # read list of Postings for this particular index
+        map_size, map_fh = indices[ipos]
+
+        plsize = int.from_bytes(
+            map_fh.read(4),
+            byteorder="little",
+            signed=False
+        )
+        indices[ipos] = (map_size - 4 - plsize, map_fh)
+        map_size = indices[ipos][0]
+
+        while plsize > 0:
+            pbytes = map_fh.read(Posting.size)
+            posting = Posting()
+            posting.decode(pbytes)
+            val_pq.put(
+                posting,
+                block=False
+            )
+            plsize -= Posting.size
+
+        # append the next key to the key priority queue
+        # for this particular index, if it exists
+        if map_size <= 0:
+            continue
+        ksize = int.from_bytes(
+            map_fh.read(4),
+            byteorder="little",
+            signed=False
+        )
+        key = map_fh.read(ksize).decode("utf-8")
+        indices[ipos] = (map_size - 4 - ksize, map_fh)
+        key_pq.put(
+            (key, ipos),
+            block=False
+        )
+
+    # write the final key value pair to disk, if it exists
+    if data_key:
+        fh.write(_struct_str(data_key))
+        while not val_pq.empty():
+            posting = val_pq.get(block=False)
+            data_mmap.extend(posting.encode())
+        fh.write(len(data_mmap).to_bytes(
+            4,
+            byteorder="little",
+            signed=False
+        ))
+        fh.write(data_mmap)
+
+    # update and write headers
+    # then mark as success
+    header_mmap = bytearray()
+    header_mmap.append(0)
+    header_mmap.extend(b"\0\0\0\0\0\0\0")
+    header_mmap.extend(docid.to_bytes(
+        8,
+        byteorder="little",
+        signed=False
+    ))
+    header_mmap.extend(keycnt.to_bytes(
+        8,
+        byteorder="little",
+        signed=False
+    ))
+    fh.seek(0, 0)
+    fh.write(header_mmap)
+    return True
+
 
