@@ -102,7 +102,6 @@ if __name__ == "__main__":
         with tempfile.NamedTemporaryFile(delete=True) as tempfh:  # Create a temporary file with automatic deletion
             outputfh = open(sys.argv[2], "w+b")
             main(dir, tempfh, outputfh)
-            tempfh.close()
             outputfh.close()
 
             file_size = os.path.getsize(sys.argv[2]) / 1024
