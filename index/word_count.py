@@ -3,7 +3,7 @@
 # computes the word frequencies of the response
 # based on the tokenizer in helpers/tokenize
 
-from helpers.tokenize import tokenize
+from index.tokenize import tokenize
 
 def to_tokens(text_content):
     """Returns a list of tokens from after tokenizing text_content.
@@ -28,7 +28,6 @@ def word_count(tokens):
     :rtype: dict[str, int]
     """
     word_dict = dict()
-    content_size = 0
 
     for token in tokens:
         word_dict[token] = word_dict.get(token, 0) + 1
