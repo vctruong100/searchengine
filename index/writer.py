@@ -80,7 +80,7 @@ def write_partial_index(index, docid, fh):
         ))
 
         # append
-        fh.seek(0, end_offset)
+        fh.seek(end_offset)
 
         # encode key value pairs
         # the keys are sorted lexicographically
@@ -121,7 +121,7 @@ def write_partial_index(index, docid, fh):
             byteorder="little",
             signed=False
         ))
-        fh.seek(0, end_offset)
+        fh.seek(end_offset)
         fh.truncate(end_offset)
         raise e
 
