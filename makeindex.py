@@ -33,7 +33,7 @@ def main(dir, fh):
     docID = 0
     stemmer = PorterStemmer()
     doc_limit = 100  # cutoff point for partial index writing
-    partial_fh = f"{fh.name}.part"
+    part_fh = open(f"{fh.name}.part", 'w+b')
 
     # recursively walk through the directory
     for root, _, files in os.walk(dir):
@@ -70,13 +70,13 @@ def main(dir, fh):
 
                 # Periodically write the partial index to disk
                 if docID % doc_limit == 0: # write for every 100 documents
-                    with open(partial_fh, 'w+b') as part_fh:
-                        write_partial_index(inverted_index, docID, part_fh)
+                    write_partial_index(inverted_index, docID, part_fh)
 
     # Final write for any remaining documents
     if inverted_index:
-        with open(partial_fh, 'w+b') as part_fh:
-            write_partial_index(inverted_index, docID, part_fh)
+        write_partial_index(inverted_index, docID, part_fh)
+
+    part_fh.close()
 
     with open(f"{fh.name}.part", 'r+b') as part_fh:
         merge_index(part_fh, fh)
@@ -84,7 +84,7 @@ def main(dir, fh):
     print(f"Number of documents: {docID}")
 
     # Read the keycnt field from the merged index file to get the number of unique words
-    fh.seek(16)  # keycnt is located at the 16th byte offset
+    fh.seek(16)
 
     # convert the read bytes to an unsigned integer
     # byteorder="little" - data is stored in little-endian format, least significant byte (the "little end") comes first
