@@ -133,12 +133,14 @@ def merge_index(partfh, fh):
     The output is written to `fh` as a merged key-value map that is sorted.
 
     `partfh` must be seekable.
+    `fh` must be seekable.
 
     If `partfh` and `fh` refer to the same file, merging behavior is undefined.
 
     Returns True if it succeeds.
     """
     assert partfh.seekable(), "partfh is not seekable"
+    assert fh.seekable(), "fh is not seekable"
 
     partcnt, docid = _get_header(partfh)
 
