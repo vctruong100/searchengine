@@ -12,14 +12,16 @@ from index.tokenize import tokenize
 from json import load
 from index.posting import Posting
 from index.word_count import word_count
-from index.writer import write_partial_index
+from index.writer import write_partial_index, merge_index
 from collections import defaultdict #  to simplify and speed up the insertion of postings
 import time
 from nltk.stem import PorterStemmer
+import tempfile # for temporary file creation
+
 
 USAGE_MSG = "usage: python makeindex.py pages/ outputfile"
 
-def main(dir, fh):
+def main(dir, tempfh, outputfh):
     """Makes the index from a collection of
     cached pages recursively from the directory (dir).
     Writes the output to the file handler (fh).
@@ -40,6 +42,8 @@ def main(dir, fh):
         for file in files:
             if file.endswith(".json"):
                 docID += 1
+                print(f"Document ID: {docID}", flush=True)
+
                 path = os.path.join(root, file)
                 with open(path, 'r', encoding='utf-8') as f:
 
@@ -69,17 +73,18 @@ def main(dir, fh):
 
                 # Periodically write the partial index to disk
                 if docID % doc_limit == 0: # write for every 100 documents
-                    write_partial_index(inverted_index, docID, fh)
+                    write_partial_index(inverted_index, docID, tempfh)
 
     # Final write for any remaining documents
     if inverted_index:
-        write_partial_index(inverted_index, docID, fh)
+        write_partial_index(inverted_index, docID, tempfh)
 
     num_unique_words = len(unique_words)
     print(f"Number of documents: {docID}")
     print(f"Number of unique words: {num_unique_words}")
 
-    # write_index(inverted_index, docID, fh)
+    # Merge the partial indices into the final output file
+    merge_index(tempfh, outputfh)
 
     end_time = time.time()  # Capture the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time
@@ -89,14 +94,16 @@ if __name__ == "__main__":
     try:
         dir = sys.argv[1]
         assert os.path.isdir(dir), USAGE_MSG
-        fh = open(sys.argv[2], "w+b")
+
+        with tempfile.NamedTemporaryFile(delete=True) as tempfh:  # Create a temporary file with automatic deletion
+            outputfh = open(sys.argv[2], "w+b")
+            main(dir, tempfh, outputfh)
+            tempfh.close()
+            outputfh.close()
+
+            file_size = os.path.getsize(sys.argv[2]) / 1024
+            print(f"Total size of the index on disk: {file_size:.2f} KB")
     except:
         print(USAGE_MSG)
         sys.exit(1)
-
-    main(dir, fh)
-    fh.close()
-
-    file_size = os.path.getsize(sys.argv[2]) / 1024
-    print(f"Total size of the index on disk: {file_size:.2f} KB")
 
