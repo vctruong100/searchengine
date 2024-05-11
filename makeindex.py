@@ -29,7 +29,6 @@ def main(dir, fh):
 
     """
     start_time = time.time()
-
     inverted_index = defaultdict(list)
     docID = 0
     stemmer = PorterStemmer()
@@ -68,7 +67,6 @@ def main(dir, fh):
                         inverted_index[token].append(posting)
                         unique_words.add(token)
 
-
                 # Periodically write the partial index to disk
                 if docID % doc_limit == 0: # write for every 100 documents
                     write_partial_index(inverted_index, docID, fh)
@@ -91,7 +89,7 @@ if __name__ == "__main__":
     try:
         dir = sys.argv[1]
         assert os.path.isdir(dir), USAGE_MSG
-        fh = open(sys.argv[2], "r+b")
+        fh = open(sys.argv[2], "w+b")
     except:
         print(USAGE_MSG)
         sys.exit(1)
