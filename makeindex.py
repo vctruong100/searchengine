@@ -35,7 +35,6 @@ def main(dir, tempfh, outputfh):
     docID = 0
     stemmer = PorterStemmer()
     doc_limit = 100  # cutoff point for partial index writing
-    unique_words = set()
 
     # recursively walk through the directory
     for root, _, files in os.walk(dir):
@@ -69,7 +68,6 @@ def main(dir, tempfh, outputfh):
                     for token, count in token_counts.items():
                         posting = Posting(docid=docID, tfidf=count)
                         inverted_index[token].append(posting)
-                        unique_words.add(token)
 
                 # Periodically write the partial index to disk
                 if docID % doc_limit == 0: # write for every 100 documents
@@ -79,12 +77,18 @@ def main(dir, tempfh, outputfh):
     if inverted_index:
         write_partial_index(inverted_index, docID, tempfh)
 
-    num_unique_words = len(unique_words)
     print(f"Number of documents: {docID}")
-    print(f"Number of unique words: {num_unique_words}")
 
     # Merge the partial indices into the final output file
     merge_index(tempfh, outputfh)
+
+    # Read the keycnt field from the merged index file to get the number of unique words
+    outputfh.seek(16)  # keycnt is located at the 16th byte offset
+
+    # convert the read bytes to an unsigned integer
+    # byteorder="little" - data is stored in little-endian format, least significant byte (the "little end") comes first
+    keycnt = int.from_bytes(outputfh.read(8), byteorder="little", signed=False)
+    print(f"Number of unique words: {keycnt}")
 
     end_time = time.time()  # Capture the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time
