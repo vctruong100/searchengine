@@ -6,7 +6,7 @@
 
 # symbols (non-alnum chars) that are in this set will not split the token and
 # instead be included in the token
-GROUP_SYMBOLS = r"-./_~."
+GROUP_SYMBOLS = r"-."
 
 # of the chars in GROUP_SYMBOLS, these symbols are non-terminable (i.e. tokens
 # cannot end with these symbols) (e.g. "a..." is not a token)
@@ -14,7 +14,7 @@ NONTERM_GROUP_SYMBOLS = r"."
 
 # of the chars in GROUP_SYMBOLS, these symbols cannot repeat in sequence inside
 # a token (e.g. "a..b" is not a token)
-NONREPEAT_GROUP_SYMBOLS = r"."
+NONREPEAT_GROUP_SYMBOLS = r"-."
 
 
 def _add_processed_word(word, processed_list, alnum_hit):
