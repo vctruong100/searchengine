@@ -79,8 +79,9 @@ def write_partial_index(index, docid, fh):
             signed=False
         ))
 
-        # append
-        fh.seek(end_offset, 0)
+        # append either at the last file position or end of header
+        # whichever comes last
+        fh.seek(max(end_offset, 12), 0)
 
         # encode key value pairs
         # the keys are sorted lexicographically
