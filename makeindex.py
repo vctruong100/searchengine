@@ -77,16 +77,20 @@ def main(dir, fh):
     if inverted_index:
         write_partial_index(inverted_index, docID, part_fh)
 
-    part_fh.close()
+    end_time = time.time()  # Capture the end time of the indexing process
+    elapsed_time = end_time - start_time  # Calculate the elapsed time
+    print(f"Elapsed time of indexing: {elapsed_time:.2f} seconds")
 
-    with open(f"{fh.name}.part", 'r+b') as part_fh:
-        merge_index(part_fh, fh)
-
-    print_result(fh.name)
+    start_time = time.time()  # Capture the start time of the merging process
+    part_fh.seek(0)  # Move the file pointer to the beginning of the file
+    merge_index(part_fh, fh)
 
     end_time = time.time()  # Capture the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time
-    print(f"Elapsed time: {elapsed_time:.2f} seconds")
+    print(f"Elapsed time of merging: {elapsed_time:.2f} seconds")
+
+    part_fh.close()
+
 
 if __name__ == "__main__":
     try:
