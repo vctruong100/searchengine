@@ -16,6 +16,7 @@ from index.writer import write_partial_index, merge_index
 from collections import defaultdict #  to simplify and speed up the insertion of postings
 import time
 from nltk.stem import PorterStemmer
+from print_result import print_result
 
 USAGE_MSG = "usage: python makeindex.py pages/ outputfile"
 
@@ -81,16 +82,7 @@ def main(dir, fh):
     with open(f"{fh.name}.part", 'r+b') as part_fh:
         merge_index(part_fh, fh)
 
-    print(f"Number of documents: {docID}")
-
-    # Read the keycnt field from the merged index file to get the number of unique words
-    fh.seek(16)
-
-    # convert the read bytes to an unsigned integer
-    # byteorder="little" - data is stored in little-endian format, least significant byte (the "little end") comes first
-    keycnt = int.from_bytes(fh.read(8), byteorder="little", signed=False)
-    print(f"Number of unique words: {keycnt}")
-
+    print_result(fh.name)
 
     end_time = time.time()  # Capture the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time
@@ -108,7 +100,4 @@ if __name__ == "__main__":
 
     main(dir, fh)
     fh.close()
-
-    file_size = os.path.getsize(sys.argv[2]) / 1024
-    print(f"Total size of the index on disk: {file_size:.2f} KB")
 
