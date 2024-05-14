@@ -99,7 +99,6 @@ if __name__ == "__main__":
         fh = open(sys.argv[2], "w+b")
     except Exception as e:
         print(USAGE_MSG)
-        print("Error:", e)
         sys.exit(1)
 
     main(dir, fh)
