@@ -8,3 +8,7 @@ To install dependencies, use ``python -m pip install -r requirements.txt`` or
 you do not have the permissions.
 
 To build the index, use ``python makeindex.py path/to/pages/ path/to/output``.
+
+To run the search engine that processes user queries locally, use
+``python search.py path/to/index``.
+
