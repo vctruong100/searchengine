@@ -11,23 +11,14 @@ from collections import defaultdict
 
 USAGE_MSG = "usage: python search.py indexfile"
 
-def load_index(indexfile):
-    """Loads the index file and returns the index object.
-    """
-    pass
-
-def search_query(query, index):
-    """Searches the query in the index and returns the results.
-    """
-    pass
-
-def run_server(indexfile):
+def run_server(path):
     """Runs the server as a long running process
     that constantly accepts user input (from the local machine).
     """
-    print("file:", indexfile)
+    print("path:", path)
+
     # load the index file
-    index = load_index(indexfile)
+    index_reader = load_index(path) # some code here to read index
 
     while True:
         query = input()
@@ -36,17 +27,17 @@ def run_server(indexfile):
         if not query:
             continue
 
-        results = search_query(query, index)
+        results = index_reader.search(query)
         for result in results:
             print(result)
 
 
 if __name__ == "__main__":
     try:
-        indexfile = sys.argv[1]
+        path = sys.argv[1]
     except Exception as e:
         print(USAGE_MSG)
         sys.exit(1)
 
-    run_server(indexfile)
+    run_server(path)
 
