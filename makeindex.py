@@ -34,7 +34,8 @@ def main(dir, fh):
     docID = 0
     stemmer = PorterStemmer()
     doc_limit = 100  # cutoff point for partial index writing
-    part_fh = open(f"{fh.name}.part", 'w+b')
+    part_filename = f"{fh.name}.part"
+    part_fh = open(part_filename, 'w+b')
 
     # recursively walk through the directory
     for root, _, files in os.walk(dir):
@@ -90,7 +91,7 @@ def main(dir, fh):
     print(f"Elapsed time of merging: {elapsed_time:.2f} seconds")
 
     part_fh.close()
-    os.remove(part_fh)  # Delete the temporary partial index file
+    os.remove(part_filename)  # Delete the temporary partial index file
 
 
 if __name__ == "__main__":
