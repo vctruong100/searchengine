@@ -90,6 +90,7 @@ def main(dir, fh):
     print(f"Elapsed time of merging: {elapsed_time:.2f} seconds")
 
     part_fh.close()
+    os.remove(part_fh)  # Delete the temporary partial index file
 
 
 if __name__ == "__main__":
