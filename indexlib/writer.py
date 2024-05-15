@@ -129,7 +129,13 @@ def write_partial_index(index, docid, fh):
 
 def merge_index(partfh, fh):
     """Merges k-way using a sequence of partial sorted indices from `partfh`.
-    The output is written to `fh` as a merged key-value map that is sorted.
+    The output is written to its own bucket as a merged key-value map
+    that is sorted. The bucket corresponds to the key's first grapheme.
+
+    For each bucket, a corresponding seek file is created with extension ".seek"
+    to enable fast retrieval. This consists of a sequence of (string, u32) pairs.
+
+    Note: `fh` only stores the header of the merged format.
 
     `partfh` must be seekable.
     `fh` must be seekable.
@@ -152,6 +158,11 @@ def merge_index(partfh, fh):
     # different file handlers for each partial index
     # each element is a 2-tuple: (size, fh)
     indices = []
+
+    # file handlers for the current index bucket
+    index_bucket_char = None
+    index_bucket = None
+    index_bucket_seek = None
 
     # key priority queue
     key_pq = PriorityQueue(maxsize=partcnt)
@@ -198,18 +209,43 @@ def merge_index(partfh, fh):
 
         if key != data_key:
             if data_key:
+                # store in its own bucket based on first char
+                # only store in separate bucket if it's ascii ( < 128)
+                if ord(data_key[0]) < 128 and data_key[0] != index_bucket_char:
+                    if index_bucket:
+                        index_bucket.close()
+                        index_bucket_seek.close()
+                    index_bucket_char = data_key[0]
+                    index_bucket = open(f"index/{ord(index_bucket_char)}", "wb")
+                    index_bucket_seek = open(f"index/{ord(index_bucket_char)}.seek", "wb")
+                elif ord(data_key[0]) >= 128 and ord(index_bucket_char or '\0') < 128:
+                    if index_bucket:
+                        index_bucket.close()
+                        index_bucket_seek.close()
+                    index_bucket_char = '\uFFFF'
+                    index_bucket = open(f"index/misc", "wb")
+                    index_bucket_seek = open(f"index/misc.seek", "wb")
+
                 # write the key-val pair to disk before
                 # changing the key reference
-                fh.write(_struct_str(data_key))
-                while not val_pq.empty():
-                    posting = val_pq.get(block=False)
-                    data_mmap.extend(posting.encode())
-                fh.write(len(data_mmap).to_bytes(
+
+                index_bucket.write(_struct_str(data_key))
+                index_bucket_seek.write(int.to_bytes(
+                    index_bucket.tell(),
                     4,
                     byteorder="little",
                     signed=False
                 ))
-                fh.write(data_mmap)
+
+                while not val_pq.empty():
+                    posting = val_pq.get(block=False)
+                    data_mmap.extend(posting.encode())
+                index_bucket.write(len(data_mmap).to_bytes(
+                    4,
+                    byteorder="little",
+                    signed=False
+                ))
+                index_bucket.write(data_mmap)
 
             # update references
             data_key = key
@@ -255,16 +291,38 @@ def merge_index(partfh, fh):
 
     # write the final key value pair to disk, if it exists
     if data_key:
-        fh.write(_struct_str(data_key))
-        while not val_pq.empty():
-            posting = val_pq.get(block=False)
-            data_mmap.extend(posting.encode())
-        fh.write(len(data_mmap).to_bytes(
+        if ord(data_key[0]) < 128 and data_key[0] != index_bucket_char:
+            if index_bucket:
+                index_bucket.close()
+                index_bucket_seek.close()
+            index_bucket_char = data_key[0]
+            index_bucket = open(f"index/{ord(index_bucket_char)}", "wb")
+            index_bucket_seek = open(f"index/{ord(index_bucket_char)}.seek", "wb")
+        elif ord(data_key[0]) >= 128 and ord(index_bucket_char or '\0') < 128:
+            if index_bucket:
+                index_bucket.close()
+                index_bucket_seek.close()
+            index_bucket_char = '\uFFFF'
+            index_bucket = open(f"index/misc", "wb")
+            index_bucket_seek = open(f"index/misc.seek", "wb")
+
+        index_bucket_seek.write(_struct_str(data_key))
+        index_bucket_seek.write(int.to_bytes(
+            index_bucket.tell(),
             4,
             byteorder="little",
             signed=False
         ))
-        fh.write(data_mmap)
+
+        while not val_pq.empty():
+            posting = val_pq.get(block=False)
+            data_mmap.extend(posting.encode())
+        index_bucket.write(len(data_mmap).to_bytes(
+            4,
+            byteorder="little",
+            signed=False
+        ))
+        index_bucket.write(data_mmap)
 
     # update and write headers
     header_mmap = bytearray()
@@ -280,6 +338,7 @@ def merge_index(partfh, fh):
         byteorder="little",
         signed=False
     ))
+    header_mmap.extend(b"\0\0\0\0\0\0\0\0")
     fh.seek(0, 0)
     fh.write(header_mmap)
 
@@ -287,6 +346,9 @@ def merge_index(partfh, fh):
     # then return True
     for ind in indices:
         ind[1].close()
+    if index_bucket:
+        index_bucket.close()
+        index_bucket_seek.close()
     return True
 
 
