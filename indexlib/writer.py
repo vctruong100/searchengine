@@ -1,11 +1,10 @@
-# index/writer.py
+# indexlib/writer.py
 #
 # writes to inverted index
-# see index/spec
+# see indexlib/spec
 
 from queue import PriorityQueue
-from index.posting import Posting
-
+from indexlib.posting import Posting
 
 def _struct_str(s):
     """Encodes a string `s` to a byte sequence.

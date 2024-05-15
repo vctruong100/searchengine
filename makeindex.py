@@ -7,15 +7,15 @@
 
 import os
 import sys
-from bs4 import BeautifulSoup
-from index.tokenize import tokenize
-from json import load
-from index.posting import Posting
-from index.word_count import word_count
-from index.writer import write_partial_index, merge_index
-from collections import defaultdict #  to simplify and speed up the insertion of postings
 import time
+from bs4 import BeautifulSoup
+from collections import defaultdict # simplify and speed up Posting insertion
+from json import load
 from nltk.stem import PorterStemmer
+from indexlib.tokenize import tokenize
+from indexlib.posting import Posting
+from indexlib.word_count import word_count
+from indexlib.writer import write_partial_index, merge_index
 from print_result import print_result
 
 USAGE_MSG = "usage: python makeindex.py pages/ outputfile"

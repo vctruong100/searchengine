@@ -3,7 +3,7 @@
 # computes the word frequencies of the response
 # based on the tokenizer in helpers/tokenize
 
-from index.tokenize import tokenize
+from indexlib.tokenize import tokenize
 
 def to_tokens(text_content):
     """Returns a list of tokens from after tokenizing text_content.

@@ -1,9 +1,8 @@
-# index/posting.py
+# indexlib/posting.py
 #
 # posting class
 
 from functools import total_ordering
-
 
 @total_ordering
 class Posting:

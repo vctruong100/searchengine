@@ -1,6 +1,9 @@
 # cache files
 __pycache__/
 
+# index file
+index/
+
 # archive files
 *.tar
 *.tar.gz
@@ -8,3 +11,4 @@ __pycache__/
 
 # json files
 *.json
+
