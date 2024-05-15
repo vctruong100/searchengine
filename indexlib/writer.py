@@ -229,7 +229,7 @@ def merge_index(partfh, fh):
                 # write the key-val pair to disk before
                 # changing the key reference
 
-                index_bucket.write(_struct_str(data_key))
+                index_bucket_seek.write(_struct_str(data_key))
                 index_bucket_seek.write(int.to_bytes(
                     index_bucket.tell(),
                     4,
