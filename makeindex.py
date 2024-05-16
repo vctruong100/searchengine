@@ -20,15 +20,20 @@ from print_result import print_result
 
 USAGE_MSG = "usage: python makeindex.py pages/ outputfile"
 
-def main(dir, fh):
+def main(dir):
     """Makes the index from a collection of
     cached pages recursively from the directory (dir).
     Writes the output to the file handler (fh).
 
     :param dir str: The directory
-    :param fh: The output file handler
 
     """
+
+    output_path = "index/merged_index"
+    if not os.path.exists("index"):
+        os.mkdir("index")
+    fh = open(output_path, "w+b")
+
     start_time = time.time()
     inverted_index = defaultdict(list)
     docID = 0
@@ -92,17 +97,16 @@ def main(dir, fh):
 
     part_fh.close()
     os.remove(part_filename)  # Delete the temporary partial index file
+    fh.close()
 
 
 if __name__ == "__main__":
     try:
         dir = sys.argv[1]
         assert os.path.isdir(dir), USAGE_MSG
-        fh = open(sys.argv[2], "w+b")
     except Exception as e:
         print(USAGE_MSG)
         sys.exit(1)
 
-    main(dir, fh)
-    fh.close()
+    main(dir)
 
