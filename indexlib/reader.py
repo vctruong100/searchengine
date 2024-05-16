@@ -2,6 +2,7 @@
 #
 # reader for index files
 
+import os
 import glob
 from indexlib.posting import Posting
 
@@ -13,35 +14,37 @@ DOCID_MAPPING = []
 # precomputed
 _root_dir = "index/"
 for path in glob.glob("*", root_dir=_root_dir):
-    if path.endswith(".seek"):
-        seekfile = open(_root_dir + path, "rb")
-        while True:
-            slen = seekfile.read(4)
-            if not slen:
-                break
-            slen = int.from_bytes(
-                slen,
-                byteorder="little",
-                signed=False
-            )
-            str = seekfile.read(slen).decode("utf-8")
-            seekkey = str[0] if ord(str[0]) < 128 else "misc"
-            dic = INDEX_SEEK.get(seekkey, None)
-            if not dic:
-                dic = {}
-                INDEX_SEEK[seekkey] = dic
-            dic[str] = int.from_bytes(
-                seekfile.read(4),
-                byteorder="little",
-                signed=False
-            )
-        seekfile.close()
-    else:
-        bucketfile = open(_root_dir + path, "rb")
-        if path != "misc":
-            INDEX_FILES[chr(int(path))] = bucketfile
+    full_path = os.path.join(_root_dir, path)
+    if os.path.isfile(full_path):
+        if path.endswith(".seek"):
+            seekfile = open(_root_dir + path, "rb")
+            while True:
+                slen = seekfile.read(4)
+                if not slen:
+                    break
+                slen = int.from_bytes(
+                    slen,
+                    byteorder="little",
+                    signed=False
+                )
+                str = seekfile.read(slen).decode("utf-8")
+                seekkey = str[0] if ord(str[0]) < 128 else "misc"
+                dic = INDEX_SEEK.get(seekkey, None)
+                if not dic:
+                    dic = {}
+                    INDEX_SEEK[seekkey] = dic
+                dic[str] = int.from_bytes(
+                    seekfile.read(4),
+                    byteorder="little",
+                    signed=False
+                )
+            seekfile.close()
         else:
-            INDEX_FILES[path] = bucketfile
+            bucketfile = open(_root_dir + path, "rb")
+            if path != "misc":
+                INDEX_FILES[chr(int(path))] = bucketfile
+            else:
+                INDEX_FILES[path] = bucketfile
 
 
 # parse countdoc file
