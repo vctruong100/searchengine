@@ -97,16 +97,21 @@ def main(dir):
     # Merge the partial index files
     start_time = time.time()  # Capture the start time of the merging process
     part_fh.seek(0)  # Move the file pointer to the beginning of the file
+    
     print("Merging partial index files...")
-    merge_index(part_fh, fh)
-
+    try: 
+        merge_index(part_fh, fh)
+    except Exception as e:
+        print(f"An error occurred during merging: {e}")
+        sys.exit(1)
+    
     end_time = time.time()  # Capture the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time
     print(f"Elapsed time of merging: {elapsed_time:.2f} seconds")
 
     part_fh.close()
-    os.remove(part_filename)  # Delete the temporary partial index file
     fh.close()
+    os.remove(part_filename)  # Delete the temporary partial index file
     os.remove(output_path)
 
 if __name__ == "__main__":
