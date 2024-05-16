@@ -98,7 +98,7 @@ def main(dir):
     part_fh.close()
     os.remove(part_filename)  # Delete the temporary partial index file
     fh.close()
-
+    os.remove(output_path)
 
 if __name__ == "__main__":
     try:
