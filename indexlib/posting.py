@@ -6,7 +6,7 @@ from functools import total_ordering
 
 @total_ordering
 class Posting:
-    size = 12
+    size = 16
 
     def __init__(self, docid=None, tf=None, total_tokens=None, fields=dict()):
         self.docid = docid
