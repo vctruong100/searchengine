@@ -48,7 +48,10 @@ def process_query(query):
             # Calculate TF-IDF
             
             # TF = term frequency of the token / total tokens in the document
-            tf = posting.tf / posting.total_tokens
+            if posting.total_tokens == 0:
+                tf = 0
+            else:
+                tf = posting.tf / posting.total_tokens
             tf_idf = idf * tf
             doc_scores[posting.docid] += tf_idf
 
