@@ -23,9 +23,7 @@ def process_query(query):
     stemmer = PorterStemmer()
     query = query.split()
     stemmed_words = [stemmer.stem(word) for word in query]
-    print("Stemmed words:", stemmed_words)
     doc_count = len(DOCID_MAPPING)
-    print("Doc count:", doc_count)
     
     postings = {}  
     for word in stemmed_words:
@@ -57,7 +55,7 @@ def process_query(query):
 
     # Format output to include rankings, URLs, and scores
     results = []
-    for rank, (doc_id, score) in enumerate(ranked_docs[:20], 1):  # Limit results to top 20
+    for rank, (doc_id, score) in enumerate(ranked_docs[:10], 1):  # Limit results to top 10
         url = get_url(doc_id)
         result = f"{rank}. {url} (Score: {score:.2f})"
         results.append(result)
@@ -70,7 +68,6 @@ def run_server():
     while True:
         query = input("Enter query:")
         # do query work
-        print("Received:", query)
         if not query:
             continue
         results = process_query(query)
