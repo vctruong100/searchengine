@@ -43,7 +43,9 @@ def process_query(query):
         
         for posting in posting_list:
             # Calculate TF-IDF
-            tf_idf = idf * posting.tfidf
+            print(f"Posting: {posting.docid}, {posting.tf}, {posting.total_tokens}")
+            tf = posting.tf / posting.total_tokens
+            tf_idf = idf * tf
             doc_scores[posting.docid] += tf_idf
 
     # Rank documents based on sum of tf-idf scores
