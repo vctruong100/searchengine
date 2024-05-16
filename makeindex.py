@@ -70,9 +70,12 @@ def main(dir):
                     stemmed_tokens = [stemmer.stem(token) for token in tokens]
                     token_counts = word_count(stemmed_tokens)
 
+                    total_tokens = len(tokens)
+
                     # Iterate over each token and its count and add a Posting to the inverted index
                     for token, count in token_counts.items():
-                        posting = Posting(docid=docID, tfidf=count)
+                        # tf = term frequency of each individual token
+                        posting = Posting(docid=docID, tf=count, total_tokens=total_tokens) 
                         inverted_index[token].append(posting)
 
                 # Periodically write the partial index to disk
