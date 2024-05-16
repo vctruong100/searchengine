@@ -7,14 +7,14 @@
 import sys
 from nltk.stem import PorterStemmer
 from collections import defaultdict
+from indexlib.posting import get_postings
 
 USAGE_MSG = "usage: python search.py indexfile"
 
-def process_query(query, index_reader):
+def process_query(query):
     """Processes the query and returns the results.
 
     :param query str: The query
-    :param index_reader IndexReader: The index reader
     :return: The results as a list of tuples (docID, score)
     :rtype: list[tuple[int, float]]
     """
@@ -25,7 +25,7 @@ def process_query(query, index_reader):
 
     postings = []
     for word in stemmed_words:
-        posting = index_reader.retrieve(word) # retrieve the posting
+        posting = get_postings(word) # retrieve the posting
         if posting:
             postings.append(posting)
     
@@ -63,16 +63,13 @@ def run_server(path):
     """
     print("path:", path)
 
-    # load the index file
-    index_reader = IndexReader(path) # assuming this exist
-
     while True:
         query = input()
         # do query work
         print("received:", query)
         if not query:
             continue
-        results = process_query(query, index_reader)
+        results = process_query(query)
         for doc, score in results:
             print(f"Doc ID: {doc}, Score: {score}")
 
