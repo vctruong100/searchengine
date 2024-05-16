@@ -5,11 +5,12 @@
 
 # import query.abc
 import sys
+import math
 from nltk.stem import PorterStemmer
 from collections import defaultdict
-from indexlib.posting import get_postings
+from indexlib.reader import DOCID_MAPPING, get_postings
 
-USAGE_MSG = "usage: python search.py indexfile"
+USAGE_MSG = "usage: python search.py"
 
 def process_query(query):
     """Processes the query and returns the results.
@@ -22,64 +23,58 @@ def process_query(query):
     stemmer = PorterStemmer()
     query = query.split()
     stemmed_words = [stemmer.stem(word) for word in query]
-
+    
+    doc_count = len(DOCID_MAPPING)
     postings = []
     for word in stemmed_words:
         posting = get_postings(word) # retrieve the posting
         if posting:
-            postings.append(posting)
-    
-    if not postings:
-        return [] # no results
+            postings.append(posting) 
 
     # binary "AND" intersection operation
     # map docID to list of tf-idf scores for intersected docs
     doc_scores = defaultdict(list)
-    for posting in postings:
-        doc_scores[posting.docid].append(posting.tfidf) # append the tf-idf score
 
-    # Filter out docs that do not appear in all postings
-    common_docs = set()
-    for doc, scores in doc_scores.items():
-        if len(scores) == len(postings):
-            common_docs.add(doc)
+    for word, posting_list in postings.items():
+        # Calculate IDF
+        doc_freq = len(posting_list)
+        idf = math.log2((doc_count + 1) / (doc_freq + 1))
+        
+        for posting in posting_list:
+            # Calculate TF-IDF
+            tf_idf = idf * posting.tfidf
+            doc_scores[posting.docid] += tf_idf
 
     # Rank documents based on sum of tf-idf scores
     ranked_docs = sorted(
-        common_docs, 
-        key=lambda doc: sum(doc_scores[doc]), 
+        doc_scores.items(), 
+        key=lambda item: item[1], 
         reverse=True
     )
 
-    # Rank documents based on sum of tf-idf scores
-    for doc in ranked_docs:
-        result.append((doc, sum(doc_scores[doc])))
+    return ranked_docs
 
-    return result
-
-def run_server(path):
+def run_server():
     """Runs the server as a long running process
     that constantly accepts user input (from the local machine).
     """
-    print("path:", path)
-
     while True:
-        query = input()
+        query = input("Enter query:")
         # do query work
-        print("received:", query)
+        print("Received:", query)
         if not query:
             continue
         results = process_query(query)
         for doc, score in results:
-            print(f"Doc ID: {doc}, Score: {score}")
+            print(f"Doc ID: {doc}, Score: {score:.3f}")
+        else:
+            print("No results found.")
 
 
 if __name__ == "__main__":
-    try:
-        path = sys.argv[1]
-    except Exception as e:
+    if len(sys.argv) != 1:
         print(USAGE_MSG)
         sys.exit(1)
 
-    run_server(path)
+    run_server()
 
