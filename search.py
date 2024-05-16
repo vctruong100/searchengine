@@ -20,40 +20,48 @@ def process_query(query):
     :return: The results as a list of tuples (docID, score)
     :rtype: list[tuple[int, float]]
     """
-    start_time = time.time()
-
     result = []
     stemmer = PorterStemmer()
     query = query.split()
     stemmed_words = [stemmer.stem(word) for word in query]
     doc_count = len(DOCID_MAPPING)
     
-    postings = {}  
+    postings = {}
+    doc_sets = []
     for word in stemmed_words:
         posting_list = get_postings(word)  # retrieve the posting
         if posting_list:
-            postings[word] = posting_list 
+            postings[word] = posting_list
 
-    # binary "AND" intersection operation
+            # Create a set of documents that contain the term 
+            doc_sets.append(set(posting.docid for posting in posting_list))
+
+    if not doc_sets:
+        return []
+
+    # Find the intersection of documents that contain all terms
+    common_docs = set.intersection(*doc_sets)
 
     # map dictionary of docID to score
     doc_scores = defaultdict(float)  
-
     for word, posting_list in postings.items():
         # Calculate IDF (Inverse Document Frequency)
         doc_freq = len(posting_list)
         idf = math.log2((doc_count + 1) / (doc_freq + 1)) 
         
         for posting in posting_list:
-            # Calculate TF-IDF
-            
-            # TF = term frequency of the token / total tokens in the document
-            if posting.total_tokens == 0:
-                tf = 0
+            # Skip documents that do not contain all terms
+            if posting.docid not in common_docs:
+                continue
             else:
-                tf = posting.tf / posting.total_tokens
-            tf_idf = idf * tf
-            doc_scores[posting.docid] += tf_idf
+                # Calculate TF-IDF
+                # TF = term frequency of the token / total tokens in the document
+                if posting.total_tokens == 0:
+                    tf = 0
+                else:
+                    tf = posting.tf / posting.total_tokens
+                tf_idf = idf * tf
+                doc_scores[posting.docid] += tf_idf
 
     # Rank documents based on sum of tf-idf scores
     ranked_docs = sorted(
@@ -68,10 +76,8 @@ def process_query(query):
         url = get_url(doc_id)
         result = f"{rank}. {url} (Score: {score:.2f})"
         results.append(result)
-
-    end_time = time.time()
-    query_time = end_time - start_time    
-    return results, query_time
+   
+    return results
 
 def run_server():
     """Runs the server as a long running process
@@ -82,9 +88,13 @@ def run_server():
         # do query work
         if not query:
             continue
-        results, query_time = process_query(query)
+        start_time = time.time()
+        results = process_query(query)
         for result in results:
             print(result)
+        
+        end_time = time.time()
+        query_time = end_time - start_time
         print(f"Query time: {query_time:.2f} seconds")
 
 if __name__ == "__main__":
