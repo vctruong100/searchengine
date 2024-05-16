@@ -32,11 +32,13 @@ class Posting:
         """
         docid = self.docid
         tf = self.tf
-
+        total_tokens = self.total_tokens
+        
         seq = bytearray()
+
         seq.extend(docid.to_bytes(8, "little"))
         seq.extend(tf.to_bytes(4, "little"))
-        seq.extend(self.total_tokens.to_bytes(4, "little"))
+        seq.extend(total_tokens.to_bytes(4, "little"))
 
         return bytes(seq)
 
