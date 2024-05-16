@@ -8,7 +8,7 @@ import sys
 import math
 from nltk.stem import PorterStemmer
 from collections import defaultdict
-from indexlib.reader import DOCID_MAPPING, get_postings
+from indexlib.reader import DOCID_MAPPING, get_postings, get_url
 
 USAGE_MSG = "usage: python search.py"
 
@@ -23,17 +23,20 @@ def process_query(query):
     stemmer = PorterStemmer()
     query = query.split()
     stemmed_words = [stemmer.stem(word) for word in query]
-    
+    print("Stemmed words:", stemmed_words)
     doc_count = len(DOCID_MAPPING)
-    postings = []
+    print("Doc count:", doc_count)
+    
+    postings = {}  
     for word in stemmed_words:
-        posting = get_postings(word) # retrieve the posting
-        if posting:
-            postings.append(posting) 
+        posting_list = get_postings(word)  # retrieve the posting
+        if posting_list:
+            postings[word] = posting_list 
 
     # binary "AND" intersection operation
-    # map docID to list of tf-idf scores for intersected docs
-    doc_scores = defaultdict(list)
+
+    # map dictionary of docID to score
+    doc_scores = defaultdict(float)  
 
     for word, posting_list in postings.items():
         # Calculate IDF
@@ -52,7 +55,13 @@ def process_query(query):
         reverse=True
     )
 
-    return ranked_docs
+    # Format output to include rankings, URLs, and scores
+    results = []
+    for rank, (doc_id, score) in enumerate(ranked_docs[:20], 1):  # Limit results to top 20
+        url = get_url(doc_id)
+        result = f"{rank}. {url} (Score: {score:.2f})"
+        results.append(result)
+    return results
 
 def run_server():
     """Runs the server as a long running process
@@ -65,11 +74,8 @@ def run_server():
         if not query:
             continue
         results = process_query(query)
-        for doc, score in results:
-            print(f"Doc ID: {doc}, Score: {score:.3f}")
-        else:
-            print("No results found.")
-
+        for result in results:
+            print(result)
 
 if __name__ == "__main__":
     if len(sys.argv) != 1:
