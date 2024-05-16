@@ -47,8 +47,6 @@ def main(dir):
         for file in files:
             if file.endswith(".json"):
                 docID += 1
-                print(f"Document ID: {docID}", flush=True)
-
                 path = os.path.join(root, file)
                 with open(path, 'r', encoding='utf-8') as f:
 
@@ -80,7 +78,8 @@ def main(dir):
 
                 # Periodically write the partial index to disk
                 if docID % doc_limit == 0: # write for every 100 documents
-                    write_partial_index(inverted_index, docID, part_fh)
+                    write_partial_index(inverted_indgiex, docID, part_fh)
+                    print(f"Document ID: {docID}", flush=True)
 
     # Final write for any remaining documents
     if inverted_index:
