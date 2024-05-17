@@ -7,18 +7,25 @@
 import sys
 import math
 import time
+import webbrowser
+import threading
+import os
 from nltk.stem import PorterStemmer
 from collections import defaultdict
 from indexlib.reader import DOCID_MAPPING, get_postings, get_url
+from flask import Flask, request, render_template
+
+app = Flask(__name__)
 
 USAGE_MSG = "usage: python search.py"
 
-def process_query(query):
+def process_query(query, num_results):
     """Processes the query and returns the results.
 
     :param query str: The query
-    :return: The results as a list of tuples (docID, score)
-    :rtype: list[tuple[int, float]]
+    :param num_results int: The number of results to return
+    :return: The results
+    :rtype: list    
     """
     result = []
     stemmer = PorterStemmer()
@@ -72,35 +79,61 @@ def process_query(query):
 
     # Format output to include rankings, URLs, and scores
     results = []
-    for rank, (doc_id, score) in enumerate(ranked_docs[:5], 1):  # Limit results to top 10
+    for rank, (doc_id, score) in enumerate(ranked_docs[:num_results], 1):
         url = get_url(doc_id)
-        result = f"{rank}. {url} (Score: {score:.2f})"
+        result = f'{rank}. <a href="{url}" target="_blank">{url}</a> (Score: {score:.2f})'
         results.append(result)
    
     return results
 
-def run_server():
-    """Runs the server as a long running process
-    that constantly accepts user input (from the local machine).
-    """
-    while True:
-        query = input("Enter query:")
-        # do query work
-        if not query:
-            continue
-        start_time = time.time_ns()  # Start timing using time_ns() for higher precision
-        results = process_query(query)
-        for result in results:
-            print(result)
+@app.route("/", methods=["GET", "POST"])
+def search():
+    results = []
+    query_time = 0
+    if request.method == "POST":
+        query = request.form.get("query")
+        num_results = request.form.get("num_results")
+        if not num_results:
+            num_results = 5  # default value if not provided
+        else:
+            num_results = int(num_results)
+
+        start_time = time.time_ns()
+        results = process_query(query, num_results)
+        end_time = time.time_ns()
+        query_time = (end_time - start_time) / 1_000_000
+    return render_template("search.html", results=results, query_time=query_time)
+
+
+# def run_server():
+#     """Runs the server as a long running process
+#     that constantly accepts user input (from the local machine).
+#     """
+#     while True:
+#         query = input("Enter query:")
+#         # do query work
+#         if not query:
+#             continue
+#         start_time = time.time_ns()  # Start timing using time_ns() for higher precision
+#         results = process_query(query)
+#         for result in results:
+#             print(result)
         
-        end_time = time.time_ns()  # End timing
-        query_time = (end_time - start_time) / 1_000_000  # Convert nanoseconds to milliseconds
-        print(f"Query time: {query_time:.2f} milliseconds")
+#         end_time = time.time_ns()  # End timing
+#         query_time = (end_time - start_time) / 1_000_000  # Convert nanoseconds to milliseconds
+#         print(f"Query time: {query_time:.2f} milliseconds")
+
+def open_browser():
+    webbrowser.open_new("http://127.0.0.1:5000/")
 
 if __name__ == "__main__":
     if len(sys.argv) != 1:
         print(USAGE_MSG)
         sys.exit(1)
 
-    run_server()
+    # Check WERKZEUG_RUN_MAIN Environment Variable to ensure
+    # that the server is only started once
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        threading.Timer(1.25, open_browser).start()
 
+    app.run(debug=True)
