@@ -88,14 +88,14 @@ def run_server():
         # do query work
         if not query:
             continue
-        start_time = time.time()
+        start_time = time.time_ns()  # Start timing using time_ns() for higher precision
         results = process_query(query)
         for result in results:
             print(result)
         
-        end_time = time.time()
-        query_time = end_time - start_time
-        print(f"Query time: {query_time:.2f} seconds")
+        end_time = time.time_ns()  # End timing
+        query_time = (end_time - start_time) / 1_000_000  # Convert nanoseconds to milliseconds
+        print(f"Query time: {query_time:.2f} milliseconds")
 
 if __name__ == "__main__":
     if len(sys.argv) != 1:
