@@ -8,6 +8,7 @@ import time
 import webbrowser
 import threading
 import os
+import sys
 from flask import Flask, request, render_template
 from indexlib.process_query import process_query
 
