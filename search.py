@@ -4,22 +4,18 @@
 # retrieves documents based on query
 
 # import query.abc
-import sys
-import math
 import time
 import webbrowser
 import threading
 import os
-from nltk.stem import PorterStemmer
-from collections import defaultdict
-from indexlib.reader import DOCID_MAPPING, get_postings, get_url
-from indexlib.process_query import process_query
 from flask import Flask, request, render_template
+from indexlib.process_query import process_query
 
 app = Flask(__name__)
 
 USAGE_MSG = "usage: python search.py"
 
+# https://flask.palletsprojects.com/en/3.0.x/
 @app.route("/", methods=["GET", "POST"])
 def search():
     results = []
