@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Engine</title>
+</head>
+<body>
+    <h1>Search Engine</h1>
+    <form method="post">
+        <label for="query">Enter Query:</label>
+        <input type="text" id="query" name="query" required>
+        <label for="num_results">Number of Results:</label>
+        <select id="num_results" name="num_results">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="100">All</option>
+        </select>
+        <button type="submit">Search</button>
+    </form>
+    {% if results %}
+    <h2>Results:</h2>
+    <ul>
+        {% for result in results %}
+        <li>{{ result|safe }}</li>
+        {% endfor %}
+    </ul>
+    <p>Query time: {{ query_time }} milliseconds</p>
+    {% endif %}
+</body>
+</html>
