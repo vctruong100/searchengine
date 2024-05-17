@@ -21,6 +21,7 @@ USAGE_MSG = "usage: python search.py"
 def search():
     results = []
     query_time = 0
+    query = ""
     if request.method == "POST":
         query = request.form.get("query")
         num_results = request.form.get("num_results")
@@ -33,7 +34,7 @@ def search():
         results = process_query(query, num_results)
         end_time = time.time_ns()
         query_time = (end_time - start_time) / 1_000_000
-    return render_template("search.html", results=results, query_time=query_time)
+    return render_template('search.html', results=results, query_time=query_time, query=query)
 
 def open_browser():
     webbrowser.open_new("http://127.0.0.1:5000/")
