@@ -13,7 +13,7 @@ def process_query(query, num_results):
     :param query str: The query
     :param num_results int: The number of results to return
     :return: The results
-    :rtype: list    
+    :rtype: list
     """
     result = []
     stemmer = PorterStemmer()
@@ -38,25 +38,55 @@ def process_query(query, num_results):
     common_docs = set.intersection(*doc_sets)
 
     # map dictionary of docID to score
+    doc_vectors = defaultdict(lambda: defaultdict(float))
+    query_vector = defaultdict(float)
+    query_length = 0.0
+
+    # map dictionary of docID to score
     doc_scores = defaultdict(float)  
     for word, posting_list in postings.items():
         # Calculate IDF (Inverse Document Frequency)
         doc_freq = len(posting_list)
         idf = math.log2((doc_count + 1) / (doc_freq + 1)) 
         
+        # Calculate TF for query using Inc.Itc
+        query_tf = query.count(word)
+        query_tf = 1 + math.log(query_tf) if query_tf > 0 else 0
+        query_weight = query_tf * idf
+        query_vector[word] = query_weight
+        query_length += query_weight ** 2
+
         for posting in posting_list:
             # Skip documents that do not contain all terms
             if posting.docid not in common_docs:
                 continue
             else:
-                # Calculate TF-IDF
-                # TF = term frequency of the token / total tokens in the document
-                if posting.total_tokens == 0:
-                    tf = 0
-                else:
-                    tf = posting.tf / posting.total_tokens
-                tf_idf = idf * tf
-                doc_scores[posting.docid] += tf_idf
+                # Calculate logarithmic TF for document
+                doc_tf = 1 + math.log(posting.tf) if posting.tf > 0 else 0
+                doc_weight = doc_tf
+                doc_vectors[posting.docid][word] = doc_weight
+
+    # Calculate the Euclidean norm (length) of the query vector
+    # Euclidean norm = the square root of the sum of the squares of the weights
+    query_length = math.sqrt(query_length)
+
+    # Normalize document vectors and compute cosine similarity
+    doc_scores = defaultdict(float)
+    for doc_id, term_weights in doc_vectors.items():
+
+        # Calculate the Euclidean norm (length) of the document vector
+        doc_length = 0.0
+        for weight in term_weights.values():
+            doc_length += weight ** 2
+        doc_length = math.sqrt(doc_length)
+        
+        # Calculate the dot product of the query and document vectors
+        for word, weight in term_weights.items():
+            normalized_doc_weight = weight / doc_length
+            normalized_query_weight = query_vector[word] / query_length
+
+            # Compute cosine similarity
+            doc_scores[doc_id] += normalized_doc_weight * normalized_query_weight
 
     # Rank documents based on sum of tf-idf scores
     ranked_docs = sorted(
