@@ -1,4 +1,4 @@
-# indexlib/posting.py
+# lib/posting.py
 #
 # posting class
 

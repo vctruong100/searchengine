@@ -10,7 +10,7 @@ import threading
 import os
 import sys
 from flask import Flask, request, render_template
-from indexlib.process_query import process_query
+from lib.process_query import process_query
 
 app = Flask(__name__)
 

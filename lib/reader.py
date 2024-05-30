@@ -1,10 +1,10 @@
-# indexlib/reader.py
+# lib/reader.py
 #
 # reader for index files
 
 import os
 import glob
-from indexlib.posting import Posting
+from lib.posting import Posting
 
 INDEX_FILES = {}
 INDEX_SEEK = {}

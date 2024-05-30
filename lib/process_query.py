@@ -5,7 +5,7 @@
 import math
 from collections import defaultdict
 from nltk.stem import PorterStemmer
-from indexlib.reader import DOCID_MAPPING, get_postings, get_url
+from lib.reader import DOCID_MAPPING, get_postings, get_url
 
 def process_query(query, num_results):
     """Processes the query and returns the results.

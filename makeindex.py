@@ -12,10 +12,10 @@ from bs4 import BeautifulSoup
 from collections import defaultdict # simplify and speed up Posting insertion
 from json import load
 from nltk.stem import PorterStemmer
-from indexlib.tokenize import tokenize
-from indexlib.posting import Posting
-from indexlib.word_count import word_count
-from indexlib.writer import write_partial_index, merge_index
+from lib.tokenize import tokenize
+from lib.posting import Posting
+from lib.word_count import word_count
+from lib.writer import write_partial_index, merge_index
 from print_result import print_result
 
 USAGE_MSG = "usage: python makeindex.py pages/ outputfile"
