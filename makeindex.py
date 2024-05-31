@@ -137,8 +137,9 @@ def make_partial(pagedir, partfh, partdoc):
                 # these are used to determine the static quality score (hits or pagerank)
                 doclinks = set()
                 for link in soup.find_all('a', href=True):
-                    link = urldefrag(urljoin(url, link))
-                    doclinks.add(link)
+                    link = urljoin(url.url, link['href'])
+                    defragged_link = urldefrag(link).url
+                    doclinks.add(defragged_link)
 
                 # free up memory from soup
                 soup.decompose()
@@ -159,13 +160,13 @@ def make_partial(pagedir, partfh, partdoc):
                 # similar hashing
                 # if content is close to one of the hashes,
                 # then skip the document
-                is_similar = False
+                is_sim = False
                 content_similar_hash = similar_hash(token_counts)
                 for hash in similar_hashes:
                     if is_similar(content_similar_hash, hash):
-                        is_similar = True
+                        is_sim = True
                         break
-                if is_similar:
+                if is_sim:
                     continue # similar to one of the indexed pages/docs
                 similar_hashes.add(content_similar_hash) # add similar hash if no similars
 
@@ -187,7 +188,7 @@ def make_partial(pagedir, partfh, partdoc):
                 # (docid, total_tokens, url)
                 docs.append(Document(
                     docid=docid,
-                    url=url,
+                    url=url.url,
                     total_tokens=total_tokens,
                     links=doclinks,
                 ))
