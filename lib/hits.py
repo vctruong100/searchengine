@@ -12,6 +12,13 @@ def initialize_scores(docs):
     return hub_scores, authority_scores
 
 def hits_algorithm(docs, max_iter=100, tol=1e-6):
+    """Calculate HITS scores for documents.
+
+    :param docs: List of Document objects
+    :param max_iter: Maximum number of iterations (default 100)
+    :param tol: Convergence tolerance (default 1e-6)
+    :return: Tuple of dictionaries of docid to hub and authority scores
+    """
     hub_scores, authority_scores = initialize_scores(docs)
 
     # Iterate up to a maximum number of iterations or until convergence
