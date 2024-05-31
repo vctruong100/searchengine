@@ -19,7 +19,8 @@ struct str {
 
 typedef struct posting {
     u64 docid;
-    u32 tf;         // term frequency
+    u32 tf;             // term frequency
+    u32 fields_bits;    // fields as a bitfield (array of booleans)
 } Posting;
 
 typedef struct document {
