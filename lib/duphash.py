@@ -120,7 +120,7 @@ def similar_hash(wordcnts):
 
     for word, cnt in wordcnts.items():
         # Create binary hash of the word
-        word_hash = crc64(word.encode("utf-8")) % (2 ** hash_size)
+        word_hash = _crc64(word.encode("utf-8")) % (2 ** hash_size)
         binary_hash = format(word_hash, f'0{hash_size}b')
 
         # Update the simhash fingerprint
