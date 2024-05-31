@@ -104,10 +104,7 @@ def get_postings(token):
         return []
     bid = min(ord(token[0]), 128)
 
-    print("bid", bid)
-    print("_INDEX_SEEK", _INDEX_SEEK)
     seekbucket = _INDEX_SEEK.get(bid, None)
-    print("seekbucket", seekbucket)
     if not seekbucket:
         return []
 

@@ -71,6 +71,7 @@ def make_partial(pagedir, partfh, partdoc):
                     continue # already written; skip
 
                 ### Read JSON file ###
+                print(f"partial flush @ doc ID: {docid}", flush=True)
 
                 path = os.path.join(root, file)
                 with open(path, 'r', encoding='utf-8') as pagefh:
@@ -196,7 +197,6 @@ def make_partial(pagedir, partfh, partdoc):
             # Periodically write the partial index to disk
             if docid % doclimit == 0: # write for every 100 documents
                 write_partial(inverted_index, docs, partfh, docfh)
-                print(f"partial flush @ doc ID: {docid}", flush=True)
 
     # Final write for any remaining documents
     if inverted_index:

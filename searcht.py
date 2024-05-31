@@ -10,6 +10,7 @@ import time
 from nltk.stem import PorterStemmer
 from collections import defaultdict
 from lib.reader import get_num_documents, get_postings, initialize, get_document
+from lib.indexfiles import *
 
 def process_query(query):
     """Processes the query and returns the results.
@@ -25,13 +26,10 @@ def process_query(query):
     stemmed_words = [stemmer.stem(word) for word in query]
     doc_count = get_num_documents()
 
-    print("stemmed_words", stemmed_words)
-
     postings = {}
     doc_sets = []
     for word in stemmed_words:
         posting_list = get_postings(word)  # retrieve the posting
-        print("posting_list", posting_list)
         if posting_list:
             postings[word] = posting_list
 
@@ -40,8 +38,6 @@ def process_query(query):
 
     if not doc_sets:
         return []
-
-    print("doc_sets", doc_sets)
 
     # Find the intersection of documents that contain all terms
     common_docs = set.intersection(*doc_sets)
@@ -74,6 +70,9 @@ def process_query(query):
                 doc_tf = 1 + math.log(posting.tf) if posting.tf > 0 else 0
                 doc_weight = doc_tf
                 doc_vectors[posting.docid][word] = doc_weight
+
+    if query_length == 0:
+        return ["Query too common or not indexed."]
 
     # Calculate the Euclidean norm (length) of the query vector
     # Euclidean norm = the square root of the sum of the squares of the weights
@@ -139,9 +138,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     initialize(
-        docinfo_filename='index/.docinfo',
-        mergeinfo_filename='index/.mergeinfo',
-        buckets_dir='index'
+        docinfo_filename=DOCINFO_NAME,
+        mergeinfo_filename=MERGEINFO_NAME,
+        buckets_dir=BUCKETS_DIR
     )
 
     run_server()

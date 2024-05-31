@@ -11,6 +11,7 @@ import sys
 from flask import Flask, request, render_template
 from lib.process_query import process_query
 from lib.reader import initialize
+from lib.indexfiles import *
 
 app = Flask(__name__)
 
@@ -46,9 +47,9 @@ if __name__ == "__main__":
 
     try:
         initialize(
-            docinfo_filename='index/.docinfo',
-            mergeinfo_filename='index/.mergeinfo',
-            buckets_dir='index'
+            docinfo_filename=DOCINFO_NAME,
+            mergeinfo_filename=MERGEINFO_NAME,
+            buckets_dir=BUCKETS_DIR
         )
     except Exception as e:
         print(f"Failed to initialize reader: {e}")
