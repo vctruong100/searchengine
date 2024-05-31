@@ -4,99 +4,122 @@
 
 import os
 import glob
-from lib.posting import Posting
+from collections import defaultdict
+from lib.structs import *
+from lib.posting import *
+from lib.document import *
 
-INDEX_FILES = {}
-INDEX_SEEK = {}
-DOCID_MAPPING = []
+_INDEX_BUCKETS = {}
+_INDEX_SEEK = defaultdict(dict)
+_DOCINFO = []
 
-# parse seek files and open index data files
-# precomputed
-_root_dir = "index/"
-for path in glob.glob("*", root_dir=_root_dir):
-    full_path = os.path.join(_root_dir, path)
-    if os.path.isfile(full_path):
-        if path.endswith(".seek"):
-            seekfile = open(_root_dir + path, "rb")
-            while True:
-                slen = seekfile.read(4)
-                if not slen:
-                    break
-                slen = int.from_bytes(
-                    slen,
-                    byteorder="little",
-                    signed=False
-                )
-                str = seekfile.read(slen).decode("utf-8")
-                seekkey = str[0] if ord(str[0]) < 128 else "misc"
-                dic = INDEX_SEEK.get(seekkey, None)
-                if not dic:
-                    dic = {}
-                    INDEX_SEEK[seekkey] = dic
-                dic[str] = int.from_bytes(
-                    seekfile.read(4),
-                    byteorder="little",
-                    signed=False
-                )
-            seekfile.close()
-        else:
-            bucketfile = open(_root_dir + path, "rb")
-            if path != "misc":
-                INDEX_FILES[chr(int(path))] = bucketfile
-            else:
-                INDEX_FILES[path] = bucketfile
+_MERGEINFO_DOCID = 0
+_MERGEINFO_TOTAL_TOKENS = 0
+
+_initialized = False
 
 
-# parse countdoc file
-with open("countdoc", "r", encoding="utf-8") as cdf:
-    for line in cdf:
-        if not line:
-            continue
-        docID = line.split(",")[0]
-        url = line[len(docID) + 1:].rstrip()
-        DOCID_MAPPING.append(url)
-
-
-# parse header
-# TODO
-
-
-def _get_bucketkey(str):
-    return str[0] if ord(str[0]) < 128 else "misc"
-
-
-def get_url(docid):
-    """Gets the URL associated with the document ID.
+def initialize(docinfo_filename, mergeinfo_filename, buckets_dir):
+    """Initializes the reader by opening index files
+    from the docinfo, mergeinfo, and the buckets directories.
     """
-    return DOCID_MAPPING[docid - 1]
+    if _initialized:
+        return
+
+    # parse docinfo - store docinfo file in memory
+    with open(docinfo_filename, 'rb') as docfh:
+        docfh.seek(0, 2)
+        docend = docfh.tell()
+        docfh.seek(0, 0)
+        while docfh.tell() != docend:
+            document, _ = sdocument_rd(docfh)
+            for _ in range(document.docid - len(_DOCINFO) - 1):
+                # sparse document ids - append with empty docs
+                _DOCINFO.append(Document(
+                    docid=len(_DOCINFO) + 1,
+                    url='',
+                    total_tokens=0
+                ))
+            _DOCINFO.append(document)
+
+    # parse mergeinfo - store mergeinfo file in memory
+    with open(mergeinfo_filename, 'rb') as mergefh:
+        mergefh.seek(4, 0)
+        _MERGEINFO_DOCID, _ = u64_rd(mergefh)
+        _MERGEINFO_TOTAL_TOKENS, _ = u32_rd(mergefh)
+
+    # parse seek files / open bucket files
+    for path in glob.glob("*", root_dir=buckets_dir):
+        full_path = os.path.join(buckets_dir, path)
+        if os.path.isfile(full_path):
+            bid = None
+            if path.endswith(".bucket"):
+                # bucket file
+                bid = int(path[:-7])
+                bucketfh = open(full_path, 'rb')
+                _INDEX_BUCKETS[bid] = bucketfh
+            elif path.endswith(".seek"):
+                # seek file
+                bid = int(path[:-5])
+                seekfh = open(full_path, 'rb')
+                seekfh.seek(0, 2)
+                seekend = seekfh.tell()
+                seekfh.seek(0, 0)
+                while seek.tell() != seekend:
+                    # store entire seek file in memory
+                    token, _ = sstr_rd(seekfh)
+                    offset, _ = u32_rd(seekfh)
+                    _INDEX_SEEK[bid][token] = offset
+                seekfile.close()
+
+    _initialized = True # initialized successfully
+
+
+def get_total_tokens():
+    """Returns the total number of unique tokens
+    across the entire set of documents.
+    """
+    return _MERGEINFO_TOTAL_TOKENS
+
+
+def get_num_documents():
+    """Returns the number of documents indexed.
+    """
+    return _MERGEINFO_DOCID
+
+
+def get_document(docid):
+    """Returns the Document object associated with the document ID.
+    See 'lib/document.py' for the Document interface.
+    """
+    return _DOCINFO[docid - 1]
+
 
 def get_postings(token):
     """Returns a list of postings associated with the token.
     Each posting list is sorted by ascending docID.
+    See 'lib/posting.py' for the Posting interface.
     """
     if not token:
         return []
-    bucketkey = _get_bucketkey(token)
-    seek_bucket = INDEX_SEEK.get(bucketkey, None)
+    bid = min(ord(token[0], 128)
+
+    seekbucket = _INDEX_SEEK.get(bid, None)
     if not seek_bucket:
         return []
-    seek_pos = seek_bucket.get(token, None)
-    if not seek_pos:
-        return []
-    indexfile = INDEX_FILES[bucketkey]
-    indexfile.seek(seek_pos)
 
-    posting_ls_size = int.from_bytes(
-        indexfile.read(4),
-        byteorder="little",
-        signed=False
-    )
-    posting_ls = []
-    size_read = 0
-    while size_read < posting_ls_size:
-        size_read += Posting.size
-        posting = Posting()
-        posting.decode(indexfile.read(Posting.size))
-        posting_ls.append(posting)
-    return posting_ls
+    seekoffset = seekbucket.get(token, None)
+    if not seekoffset:
+        return []
+
+    bucketfh = _INDEX_BUCKETS[bid]
+    bucketfh.seek(seekoffset, 0)
+
+    num_postings, _ = u32_rd(bucketfh)
+    postings = []
+
+    for _ in range(num_postings):
+        posting, _ = sposting_rd(bucketfh)
+        postings.append(posting)
+    return postings
 

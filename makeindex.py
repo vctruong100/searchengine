@@ -3,124 +3,222 @@
 # constructs an index file
 # from a collection of web pages
 #
-# usage: python makeindex.py pages/ outputfile
+# usage: python makeindex.py [--keep-partial | -p] path/to/pages
 
 import os
 import sys
 import time
+import itertools
 from bs4 import BeautifulSoup
 from collections import defaultdict # simplify and speed up Posting insertion
 from json import load
 from nltk.stem import PorterStemmer
-from lib.tokenize import tokenize
-from lib.posting import Posting
+from lib.tokenize import *
 from lib.word_count import word_count
-from lib.writer import write_partial_index, merge_index
-from print_result import print_result
+from lib.posting import Posting
+from lib.writer import *
+from lib.indexfiles import * # constants for index paths
 
-USAGE_MSG = "usage: python makeindex.py pages/ outputfile"
+USAGE_MSG = "usage: python makeindex.py [--keep-partial | -p] path/to/pages"
 
-def main(dir):
-    """Makes the index from a collection of
-    cached pages recursively from the directory (dir).
-    Writes the output to the file handler (fh).
 
-    :param dir str: The directory
-
+def setup_dir():
+    """Sets up the necessary directories for storing the index.
     """
+    if not os.path.isdir(INDEX_DIR):
+        os.mkdir(INDEX_DIR)
+    if not os.path.isdir(BUCKETS_DIR):
+        os.mkdir(BUCKETS_DIR)
 
-    output_path = "index/merged_index"
-    if not os.path.exists("index"):
-        os.mkdir("index")
-    fh = open(output_path, "w+b")
-    part_filename = f"{fh.name}.part"
 
-    if os.path.exists(part_filename):
-        print(f"Partial index file '{part_filename}' already exists. Skipping indexing.")
-        part_fh = open(part_filename, 'w+b')
-    else:
-        start_time = time.time()
-        inverted_index = defaultdict(list)
-        docID = 0
-        stemmer = PorterStemmer()
-        doc_limit = 100  # cutoff point for partial index writing
+def make_partial(pagedir, partfh, partdoc):
+    """Uses JSON files from within `pagedir` and writes the
+    partial index to `partfh` starting from doc ID `partdoc` + 1.
+    """
+    if partdoc == 0:
+        partfh = new_partial(fh=partfh) # restart partial file
+    partfh.seek(0, 2) # start from end
 
-        part_fh = open(part_filename, 'w+b')
-        
-        # recursively walk through the directory
-        for root, _, files in os.walk(dir):
-            for file in files:
-                if file.endswith(".json"):
-                    docID += 1
-                    path = os.path.join(root, file)
-                    with open(path, 'r', encoding='utf-8') as f:
+    docid = 0
+    doclimit = 100 # cutoff point for partial index writing
+    docfh = open(DOCINFO_NAME, 'ab')
 
-                        # load the json file
-                        js = load(f)
-                        content = js.get('content', '')
+    stemmer = PorterStemmer()
+    inverted_index = defaultdict(list)
+    docs = []
 
-                        # if the content is empty, skip
-                        if not content.strip():
-                            continue
+    start_time = time.time()
 
-                        soup = BeautifulSoup(content, 'lxml')
+    # recursively walk the pages directory
+    for root, _, files in os.walk(dir):
+        for file in files:
+            if file.endswith(".json"):
+                docid += 1
+                if docid <= partdoc:
+                    continue # already written
 
-                        text = soup.get_text()
-                        tokens = tokenize(text)
+                path = os.path.join(root, file)
+                with open(path, 'r', encoding='utf-8') as pagefh:
+                    jsond = load(pagefh)
+                    content = jsond.get('content', '').strip()
+                    url = jsond.get('url', '')
 
-                        # Stem the tokens using the Porter Stemmer
-                        # https://www.geeksforgeeks.org/python-stemming-words-with-nltk/
-                        stemmed_tokens = [stemmer.stem(token) for token in tokens]
-                        token_counts = word_count(stemmed_tokens)
+                if not content:
+                    continue # empty content
 
-                        total_tokens = len(tokens)
+                soup = BeautifulSoup(content, 'lxml')
+                important_tokens = set()
 
-                        # Iterate over each token and its count and add a Posting to the inverted index
-                        for token, count in token_counts.items():
-                            # tf = term frequency of each individual token
-                            posting = Posting(docid=docID, tf=count, total_tokens=total_tokens) 
-                            inverted_index[token].append(posting)
+                # extract regular text
+                text = soup.get_text()
+                tokens, ngrams_col = tokenize(text, n=1)
+                text = "" # possibly free up memory
 
-                    # Periodically write the partial index to disk
-                    if docID % doc_limit == 0: # write for every 100 documents
-                        write_partial_index(inverted_index, docID, part_fh)
-                        print(f"Document ID: {docID}", flush=True)
+                # extract important text
+                important_text = soup.find_all([
+                    'h1', 'h2', 'h3', 'h4',
+                    'strong', 'i', 'em', 'mark'
+                ]).get_text()
+                important_tokens.update(tokenize(important_text, n=1)[0])
+                important_text = "" # possibly free up memory
 
-        # Final write for any remaining documents
-        if inverted_index:
-            write_partial_index(inverted_index, docID, part_fh)
+                # free up memory from soup
+                soup.decompose()
 
-        end_time = time.time()  # Capture the end time of the indexing process
-        elapsed_time = end_time - start_time  # Calculate the elapsed time
-        print(f"Elapsed time of indexing: {elapsed_time:.2f} seconds")
+                # manipulate tokens
+                extend_tokens_from_ngrams(tokens, ngrams_col)
+                stem_tokens(tokens)
 
-    # Merge the partial index files
+                token_counts = word_count(stemmed_tokens)
+                total_tokens = len(token_counts.items())
+
+                # Iterate over each token and its count and add a Posting to the inverted index
+                for token, count in token_counts.items():
+                    # tf = term frequency of each individual token
+                    posting = Posting(
+                        docid=docid,
+                        tf=count,
+                        important=token in important_tokens
+                    )
+                    inverted_index[token].append(posting)
+
+                # append doc to docinfo
+                # (docid, total_tokens, url)
+                docs.append(Document(
+                    docid=docid,
+                    url=url,
+                    total_tokens=total_tokens
+                ))
+
+                # Periodically write the partial index to disk
+                if docid % doclimit == 0: # write for every 100 documents
+                    write_partial(inverted_index, docs, partfh, docfh)
+                    print(f"partial flush @ doc ID: {docid}", flush=True)
+
+    # Final write for any remaining documents
+    if inverted_index:
+        write_partial(inverted_index, docs, partfh, docfh)
+        print(f"final flush @ docID: {docid}", flush=True)
+    mark_partial(partfh)
+
+    end_time = time.time()  # Capture the end time of the indexing process
+    elapsed_time = end_time - start_time  # Calculate the elapsed time
+    print(f"Elapsed time of indexing: {elapsed_time:.2f} seconds")
+
+    # close temp file pointers from this function
+    docfh.close()
+
+
+def make_final(partfh):
+    """Merges the partial index from `partfh` into buckets
+    based on the first char of the tokens.
+    """
     start_time = time.time()  # Capture the start time of the merging process
-    part_fh.seek(0)  # Move the file pointer to the beginning of the file
-    
-    print("Merging partial index files...")
-    try: 
-        merge_index(part_fh, fh)
+    partfh.seek(0, 0)  # Move the file pointer to the beginning of the file
+    try:
+        merge_partial(partfh, MERGEINFO_NAME, BUCKETS_DIR)
     except Exception as e:
+        raise e
         print(f"An error occurred during merging: {e}")
         sys.exit(1)
-    
     end_time = time.time()  # Capture the end time
     elapsed_time = end_time - start_time  # Calculate the elapsed time
     print(f"Elapsed time of merging: {elapsed_time:.2f} seconds")
 
-    part_fh.close()
-    fh.close()
-    os.remove(part_filename)  # Delete the temporary partial index file
-    os.remove(output_path)
+
+def main(dir, keep_partial):
+    """Makes the index from a collection of cached pages
+    recursively from the directory (dir).
+
+    :param dir str: The directory
+    :param keep_partial bool: Whether partial file should be kept
+
+    """
+    # setup necessary directories
+    setup_dir()
+
+    # setup partial index
+    partok = True
+    partdoc = 0
+    partfh = None
+
+    if not os.path.isfile(PART_NAME):
+        partfh = open(PART_NAME, "w+b")
+        partok = False
+        if os.path.isfile(DOCINFO_NAME):
+            os.remove(DOCINFO_NAME)
+        print("Missing partial index file. Indexing the pages.", flush=True)
+    else:
+        partfh = open(PART_NAME, "r+b")
+        chk_p_status, partheader = check_partial(partfh)
+        partok = (chk_p_status == CHK_P_OK)
+        if chk_p_status == CHK_P_VER_MISMATCH:
+            if os.path.isfile(DOCINFO_NAME):
+                os.remove(DOCINFO_NAME)
+            print("Partial index is outdated. Indexing the pages from scratch.", flush=True)
+        elif chk_p_status == CHK_P_INCOMPLETE:
+            partdoc, _ = partheader
+            print(f"Partial index is incomplete. Continuing from doc ID {partdoc + 1}.", flush=True)
+
+    # reset partial cursor in case it moved
+    partfh.seek(0, 0)
+
+    # if partial index file is not ready, index the pages
+    if not partok:
+        make_partial(dir, partfh, partdoc)
+
+    # Merge the partial index files
+    print("Merging partial index files...", flush=True)
+    make_final(partfh)
+
+    partfh.close()
+    if not keep_partial:
+        os.remove(PART_NAME)  # Delete the temporary partial index file
+
+
 
 if __name__ == "__main__":
+    argc = len(sys.argv)
+    if argc <= 1:
+        print(USAGE_MSG)
+        sys.exit(1)
+
+    dir = None
+    keep_partial = False
+    dirarg = 1
+
+    # optional arg: keep partial
+    if sys.argv[dirarg] == "--keep-partial" or sys.argv[dirarg] == "-p":
+        # keep partial file
+        keep_partal = True
+        dirarg += 1
+
     try:
-        dir = sys.argv[1]
+        dir = sys.argv[dirarg]
         assert os.path.isdir(dir), USAGE_MSG
     except Exception as e:
         print(USAGE_MSG)
         sys.exit(1)
 
-    main(dir)
+    main(dir, keep_partial)
 

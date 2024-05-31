@@ -3,16 +3,20 @@
 # posting class
 
 from functools import total_ordering
+from lib.structs import *
 
 @total_ordering
 class Posting:
-    size = 16
-
-    def __init__(self, docid=None, tf=None, total_tokens=None, fields=dict()):
+    def __init__(
+        self,
+        docid=None,
+        tf=None,
+        important=False
+    ):
         self.docid = docid
         self.tf = tf
-        self.total_tokens = total_tokens
-        self.fields = fields
+        self.fields = dict()
+        self.fields['important'] = important
 
     def __lt__(self, other):
         return self.docid < other.docid
@@ -20,25 +24,40 @@ class Posting:
     def __eq__(self, other):
         return self.docid == other.docid
 
-    def decode(self, seq):
-        """Updates the Posting object based on the bytes.
-        """
-        self.docid = int.from_bytes(seq[:8], "little")
-        self.tf = int.from_bytes(seq[8:12], "little")
-        self.total_tokens = int.from_bytes(seq[12:16], "little")
 
-    def encode(self):
-        """Returns the Posting in bytes.
-        """
-        docid = self.docid
-        tf = self.tf
-        total_tokens = self.total_tokens
-        
-        seq = bytearray()
+def sposting_rd(fh):
+    """read struct posting
+    """
+    docid, _ = u64_rd(fh)
+    tf, _ = u32_rd(fh)
+    bits, _ = u32_rd(fh)
 
-        seq.extend(docid.to_bytes(8, "little"))
-        seq.extend(tf.to_bytes(4, "little"))
-        seq.extend(total_tokens.to_bytes(4, "little"))
+    # read fields from bits
+    important = bits & 1
 
-        return bytes(seq)
+    return Posting(
+        docid=docid,
+        tf=tf,
+        important=important,
+    ), 16
+
+
+def sposting_repr(obj):
+    """byte repr of struct posting
+    """
+    docid = obj.docid
+    tf = obj.tf
+    fields = obj.fields
+    bits = (
+        fields['important'] << 0
+        | 1 << 31
+    )
+
+    seq = bytearray()
+
+    seq.extend(u64_repr(docid))
+    seq.extend(u32_repr(tf))
+    seq.extend(u32_repr(bits))
+
+    return bytes(seq)
 

@@ -1,354 +1,291 @@
 # lib/writer.py
 #
-# writes to inverted index
-# see lib/spec
+# writes inverted index to disk
+# see lib/spec.md
 
 from queue import PriorityQueue
-from lib.posting import Posting
+from lib.structs import *
+from lib.posting import *
+from lib.document import *
 
-def _struct_str(s):
-    """Encodes a string `s` to a byte sequence.
-    struct str {
-        u32 len;
-        char[] buf;
-    };
+PART_VER = 1
+MERGE_VER = 1
+
+CHK_P_OK = 0x00                 # partial file is complete
+CHK_P_VER_MISMATCH = 0xfd       # wrong partial file version
+CHK_P_INCOMPLETE = 0xfe         # partial file is incomplete
+
+
+def new_partial(filename=None, fh=None):
+    """Creates and returns a new file handler that encapsulates the partial container format.
+    If a file handler is specified, it uses the file handler instead.
     """
-    sbuf = s.encode("utf-8")
-    slen = len(sbuf).to_bytes(
-        4,
-        byteorder="little",
-        signed=False
-    )
-    return slen + sbuf
+    assert bool(fh) != bool(filename), "either fh or filename must be specified (but not both)"
+
+    if fh:
+        fh.seek(0, 0)
+        fh.truncate()
+    else:
+        fh = open(filename, 'w+b')
+
+    # initialize partial header (14 bytes)
+    fh.write(u8_repr(PART_VER))     # version
+    fh.write(u8_repr(0))            # complete = 0
+    fh.write(u64_repr(0))           # docid = 0
+    fh.write(u32_repr(0))           # partcnt = 0
+
+    return fh
 
 
-def _get_header(fh):
-    """Get header information from `fh`.
-    Returns the partial count and highest docid as a tuple.
+def check_partial(partfh):
+    """Checks partial file. Returns a CHK_P_* constant indicating its status.
+    If status is not CHK_P_VER_MISMATCH, also returns its header as a tuple.
+    Note: The returned header excludes "version" and "is_complete".
     """
-    fh.seek(0, 0)
-    partcnt = int.from_bytes(
-        fh.read(4),
-        byteorder="little",
-        signed=False,
-    )
-    docid = int.from_bytes(
-        fh.read(8),
-        byteorder="little",
-        signed=False
-    )
-    return (partcnt, docid)
+    cur = partfh.tell()
+    partfh.seek(0, 0)
+    try:
+        version, _ = u8_rd(partfh)
+        is_complete, _ = u8_rd(partfh)
+        partdoc, _ = u64_rd(partfh)
+        partcnt, _ = u32_rd(partfh)
+
+        if version != PART_VER:
+            return CHK_P_VER_MISMATCH, None
+        if is_complete == 0:
+            return CHK_P_INCOMPLETE, (partdoc, partcnt)
+        return CHK_P_OK, (partdoc, partcnt)
+
+    finally:
+        partfh.seek(cur, 0)
 
 
-def write_partial_index(index, docid, fh):
-    """Appends the partial inverted index to `fh`.
-    The index is cleared when the index is successfully written to.
-    Returns True if and only if this function succeeds.
+def mark_partial(partfh):
+    """Marks the partial file as complete.
+    """
+    cur = partfh.tell()
+    partfh.seek(1, 0)
+    partfh.write(u8_repr(1))
+    partfh.seek(cur, 0)
 
-    `fh` must be seekable.
 
-    If the index fails to write, then (1) the file is reverted to its original
-    state, (2) the index is not cleared, (3) the function propagates the exception.
+def write_partial(index, docs, partfh, docfh):
+    """Appends the partial index to `partfh` and the docinfo to `docfh`.
+    Clears the index and docs if and only if the write was successful.
+
+    If any write fails, then:
+        (1) the files are reverted to their original states,
+        (2) the index and docs are not cleared,
+        (3) the function propagates the exception.
 
     :param index dict[str, list[Posting]]: The inverted index
-    :param docid int: The last docID within this partial index.
-    :param fh: The file handler
+    :param docs list[Document]: A list of documents to be added
+    :param partfh: The partial container file handler
+    :param docfh: The doc file handler
+
     :return: Whether the function succeeded
     :rtype: bool
+
     """
-    assert fh.seekable(), "file is not seekable"
-
-    end_offset = fh.tell()
-
-    # store previous header values
-    partcnt, prev_docid = _get_header(fh)
-
-    try:
-        part_mmap = bytearray()
-
-        # update header
-        fh.seek(0, 0)
-        fh.write((partcnt + 1).to_bytes(
-            4,
-            byteorder="little",
-            signed=False
-        ))
-        fh.write(docid.to_bytes(
-            8,
-            byteorder="little",
-            signed=False
-        ))
-
-        # append either at the last file position or end of header
-        # whichever comes last
-        fh.seek(max(end_offset, 12), 0)
-
-        # encode key value pairs
-        # the keys are sorted lexicographically
-        for key in sorted(index.keys()):
-            part_mmap.extend(_struct_str(key))
-
-            postings_mmap = bytearray()
-            for p in index[key]:
-                postings_mmap.extend(p.encode())
-
-            part_mmap.extend(len(postings_mmap).to_bytes(
-                4,
-                byteorder="little",
-                signed=False
-            ))
-            part_mmap.extend(postings_mmap)
-
-        # write data
-        fh.write(len(part_mmap).to_bytes(
-            4,
-            byteorder="little",
-            signed=False
-        ))
-        fh.write(part_mmap)
-
-        # clear index and mark as success
+    if not docs:
         index.clear()
-        return True
+        return # no docs
+
+    part_end_offset = partfh.tell()
+    doc_end_offset = docfh.tell()
+
+    # get previous header values
+    partfh.seek(2, 0)
+    prev_docid, _ = u64_rd(partfh)
+    prev_partcnt, _ = u32_rd(partfh)
+
+    # buffered write
+    # write to doc buffer and part buffer
+    # (partial tokens are sorted lexicographically)
+    part_mmap = bytearray()
+    doc_mmap = bytearray()
+    docid = None
+
+    for doc in docs:
+        docid = doc.docid
+        doc_mmap.extend(sdocument_repr(doc))
+
+    for token in sorted(index.keys()):
+        postings = index[token]
+        part_mmap.extend(sstr_repr(token))
+        part_mmap.extend(u32_repr(len(postings)))
+        for p in postings:
+            part_mmap.extend(sposting_repr(p))
+
+    # try writing to files
+    # if it fails, restore the files and propagate
+    try:
+        # update header
+        partfh.seek(2, 0)
+        partfh.write(u64_repr(docid)) # last docid in docs list
+        partfh.write(u32_repr(prev_partcnt + 1))
+
+        # update partial container
+        partfh.seek(part_end_offset, 0)
+        partfh.write(u32_repr(len(part_mmap)))
+        partfh.write(part_mmap)
+
+        # update docs
+        docfh.write(doc_mmap)
+
+        # clear index and docs
+        index.clear()
+        docs.clear()
+        return True # success
+
     except Exception as e:
-        fh.seek(0, 0)
-        fh.write(partcnt.to_bytes(
-            4,
-            byteorder="little",
-            signed=False
-        ))
-        fh.write(prev_docid.to_bytes(
-            8,
-            byteorder="little",
-            signed=False
-        ))
-        fh.seek(end_offset, 0)
-        fh.truncate(end_offset)
-        raise e
+        # restore original state of partial file
+        partfh.seek(2, 0)
+        partfh.write(u64_repr(prev_docid))
+        partfh.write(u32_repr(prev_partcnt))
+        partfh.seek(part_end_offset, 0)
+        partfh.truncate()
+
+        # restore original state of docs
+        docfh.seek(doc_end_offset, 0)
+        docfh.truncate()
+
+        raise e # propagate
 
 
-def merge_index(partfh, fh):
-    """Merges k-way using a sequence of partial sorted indices from `partfh`.
-    The output is written to its own bucket as a merged key-value map
-    that is sorted. The bucket corresponds to the key's first grapheme.
+def merge_partial(partfh, merge_filename, buckets_dir):
+    """Merges the partial container using k-way (k = partcnt).
+    The contents are stored in `buckets_dir` as buckets based on
+    the first char of the token.
 
-    For each bucket, a corresponding seek file is created with extension ".seek"
-    to enable fast retrieval. This consists of a sequence of (string, u32) pairs.
+    For each bucket, a corresponding seek file is created to enable
+    fast retrieval. This is internally stored as a sequence of string to
+    u32 pairs.
 
-    Note: `fh` only stores the header of the merged format.
+    Bucket files have ".bucket" as the file extension.
+    Seek files have ".seek" as the file extension.
 
-    `partfh` must be seekable.
-    `fh` must be seekable.
+    :param partfh: The partial container file handler
+    :param merge_filename str: The filename where merge info is stored.
+    :param buckets_dir str: The directory where buckets are stored.
 
-    If `partfh` and `fh` refer to the same file, merging behavior is undefined.
+    :return: Whether the merge was successful
+    :rtype: bool
 
-    Returns True if it succeeds.
     """
-    assert partfh.seekable(), "partfh is not seekable"
-    assert fh.seekable(), "fh is not seekable"
+    # read partial header
+    partfh.seek(2, 0)
+    docid, _ = u64_rd(partfh)
+    partcnt, _ = u32_rd(partfh)
 
-    partcnt, docid = _get_header(partfh)
+    # setup: internals
+    tokencnt = 0
+    bucket_char = None
+    bucket_fh = None
+    bucket_seekfh = None
 
-    # reserve 32 bytes for header
-    fh.seek(32, 0)
+    partseekers = []                            # list of tuples (partsize, partseekerfh)
+    key_queue = PriorityQueue(maxsize=partcnt)  # retrieve tokens in sorted order
+    val_queue = PriorityQueue()                 # retrieve sorted postings by docid
 
-    # internal header variables
-    keycnt = 0
+    # setup: initialize part seekers and key queue
+    for pid in range(partcnt):
+        partsize, _ = u32_rd(partfh)
+        partseekerfh = open(partfh.name, 'rb')
+        partseekerfh.seek(partfh.tell(), 0)
+        if partsize > 0:
+            token, token_rdsize = sstr_rd(partseekerfh)
+            partseekers.append((partsize - token_rdsize, partseekerfh))
+            key_queue.put((token, pid), block=False)
+        else:
+            partseekers.append((partsize, partseekerfh))
+        partfh.seek(partsize, 1) # skip partition
 
-    # different file handlers for each partial index
-    # each element is a 2-tuple: (size, fh)
-    indices = []
+    token_key = None
 
-    # file handlers for the current index bucket
-    index_bucket_char = None
-    index_bucket = None
-    index_bucket_seek = None
+    # inner function for dumping token to its proper bucket
+    def _dump_token_to_bucket():
+        nonlocal bucket_char
+        nonlocal bucket_fh
+        nonlocal bucket_seekfh
+        nonlocal token_key
+        codepoint = ord(token_key[0])
+        first_char = '\u0080' if codepoint >= 128 else token_key[0]
+        num_postings = 0
+        token_val_mmap = bytearray()
 
-    # key priority queue
-    key_pq = PriorityQueue(maxsize=partcnt)
+        # make new bucket if first char doesn't match
+        if bucket_char != first_char:
+            bucket_char = first_char
+            if bucket_fh:
+                bucket_fh.close()
+                bucket_seekfh.close()
+            bucket_fh = open(f'{buckets_dir}/{codepoint}.bucket', 'wb')
+            bucket_seekfh = open(f'{buckets_dir}/{codepoint}.seek', 'wb')
 
-    # val priority queue
-    # for use in determining the
-    # min element within the list of Postings
-    val_pq = PriorityQueue()
+        # process value queue until it's empty
+        while not val_queue.empty():
+            # sequentially writes postings and keeps track of how many
+            num_postings += 1
+            posting = val_queue.get(block=False)
+            token_val_mmap.extend(sposting_repr(posting))
 
-    # create file handlers for each partial index on disk
-    for i in range(partcnt):
-        map_size = int.from_bytes(
-            partfh.read(4),
-            byteorder="little",
-            signed=False
-        )
-        if map_size <= 0:
-            continue
-        map_fh = open(partfh.name, "rb")
-        map_fh.seek(partfh.tell(), 0)
-        partfh.seek(map_size, 1)
-        indices.append((map_size, map_fh))
+        # append to seek file and bucket
+        bucket_seekfh.write(sstr_repr(token_key))
+        bucket_seekfh.write(u32_repr(bucket_fh.tell()))
+        bucket_fh.write(u32_repr(num_postings))
+        bucket_fh.write(token_val_mmap)
 
-    # initialize key priority queue
-    for ipos in range(len(indices)):
-        map_size, map_fh = indices[ipos]
-        ksize = int.from_bytes(
-            map_fh.read(4),
-            byteorder="little",
-            signed=False
-        )
-        key = map_fh.read(ksize).decode("utf-8")
-        indices[ipos] = (map_size - 4 - ksize, map_fh)
-        key_pq.put(
-            (key, ipos),
-            block=False
-        )
+    # process key queue until it's empty
+    while not key_queue.empty():
+        token, pid = key_queue.get(block=False)
+        if token != token_key:
+            # dump token key, vals to bucket
+            # if and only if a token is available
+            if token_key:
+                _dump_token_to_bucket()
 
-    # empty the key priority queue
-    data_key = None
-    data_mmap = bytearray()
-    while not key_pq.empty():
-        key, ipos = key_pq.get(block=False)
+            # update to next token
+            tokencnt += 1
+            token_key = token
 
-        if key != data_key:
-            if data_key:
-                # store in its own bucket based on first char
-                # only store in separate bucket if it's ascii ( < 128)
-                if ord(data_key[0]) < 128 and data_key[0] != index_bucket_char:
-                    if index_bucket:
-                        index_bucket.close()
-                        index_bucket_seek.close()
-                    index_bucket_char = data_key[0]
-                    index_bucket = open(f"index/{ord(index_bucket_char)}", "wb")
-                    index_bucket_seek = open(f"index/{ord(index_bucket_char)}.seek", "wb")
-                elif ord(data_key[0]) >= 128 and ord(index_bucket_char or '\0') < 128:
-                    if index_bucket:
-                        index_bucket.close()
-                        index_bucket_seek.close()
-                    index_bucket_char = '\uFFFF'
-                    index_bucket = open(f"index/misc", "wb")
-                    index_bucket_seek = open(f"index/misc.seek", "wb")
+        # add local token postings to value queue
+        psize, pseekerfh = partseekers[pid]
+        psize -= 4
+        num_postings, _ = u32_rd(pseekerfh)
+        for _ in range(num_postings):
+            posting, posting_rdsize = sposting_rd(pseekerfh)
+            psize -= posting_rdsize
+            val_queue.put(posting, block=False)
+            assert psize >= 0, "malformed partition in partial file"
+        if psize > 0:
+            # add next token to key queue (partition has data)
+            token, token_rdsize = sstr_rd(pseekerfh)
+            psize -= token_rdsize
+            key_queue.put((token, pid), block=False)
 
-                # write the key-val pair to disk before
-                # changing the key reference
+        # update psize for current partseeker
+        partseekers[pid] = (psize, pseekerfh)
 
-                index_bucket_seek.write(_struct_str(data_key))
-                index_bucket_seek.write(int.to_bytes(
-                    index_bucket.tell(),
-                    4,
-                    byteorder="little",
-                    signed=False
-                ))
+    # final dump on token key, vals
+    if token_key:
+        _dump_token_to_bucket()
 
-                while not val_pq.empty():
-                    posting = val_pq.get(block=False)
-                    data_mmap.extend(posting.encode())
-                index_bucket.write(len(data_mmap).to_bytes(
-                    4,
-                    byteorder="little",
-                    signed=False
-                ))
-                index_bucket.write(data_mmap)
+    # write merge info (32 bytes)
+    mergeinfofh = open(merge_filename, 'wb')
+    mergeinfofh.write(u8_repr(MERGE_VER))
+    mergeinfofh.write(b'\0\0\0')
+    mergeinfofh.write(u64_repr(docid))
+    mergeinfofh.write(u32_repr(tokencnt))
+    mergeinfofh.write(b'\0' * 16)
+    mergeinfofh.close()
 
-            # update references
-            data_key = key
-            data_mmap = bytearray()
-            keycnt += 1
+    # close temp file handlers
+    for pseeker in partseekers:
+        pseeker[1].close()
+    if bucket_fh:
+        bucket_fh.close()
+        bucket_seekfh.close()
 
-        # read list of Postings for this particular index
-        map_size, map_fh = indices[ipos]
-
-        plsize = int.from_bytes(
-            map_fh.read(4),
-            byteorder="little",
-            signed=False
-        )
-        indices[ipos] = (map_size - 4 - plsize, map_fh)
-        map_size = indices[ipos][0]
-
-        while plsize > 0:
-            pbytes = map_fh.read(Posting.size)
-            posting = Posting()
-            posting.decode(pbytes)
-            val_pq.put(
-                posting,
-                block=False
-            )
-            plsize -= Posting.size
-
-        # append the next key to the key priority queue
-        # for this particular index, if it exists
-        if map_size <= 0:
-            continue
-        ksize = int.from_bytes(
-            map_fh.read(4),
-            byteorder="little",
-            signed=False
-        )
-        key = map_fh.read(ksize).decode("utf-8")
-        indices[ipos] = (map_size - 4 - ksize, map_fh)
-        key_pq.put(
-            (key, ipos),
-            block=False
-        )
-
-    # write the final key value pair to disk, if it exists
-    if data_key:
-        if ord(data_key[0]) < 128 and data_key[0] != index_bucket_char:
-            if index_bucket:
-                index_bucket.close()
-                index_bucket_seek.close()
-            index_bucket_char = data_key[0]
-            index_bucket = open(f"index/{ord(index_bucket_char)}", "wb")
-            index_bucket_seek = open(f"index/{ord(index_bucket_char)}.seek", "wb")
-        elif ord(data_key[0]) >= 128 and ord(index_bucket_char or '\0') < 128:
-            if index_bucket:
-                index_bucket.close()
-                index_bucket_seek.close()
-            index_bucket_char = '\uFFFF'
-            index_bucket = open(f"index/misc", "wb")
-            index_bucket_seek = open(f"index/misc.seek", "wb")
-
-        index_bucket_seek.write(_struct_str(data_key))
-        index_bucket_seek.write(int.to_bytes(
-            index_bucket.tell(),
-            4,
-            byteorder="little",
-            signed=False
-        ))
-
-        while not val_pq.empty():
-            posting = val_pq.get(block=False)
-            data_mmap.extend(posting.encode())
-        index_bucket.write(len(data_mmap).to_bytes(
-            4,
-            byteorder="little",
-            signed=False
-        ))
-        index_bucket.write(data_mmap)
-
-    # update and write headers
-    header_mmap = bytearray()
-    header_mmap.append(0)
-    header_mmap.extend(b"\0\0\0\0\0\0\0")
-    header_mmap.extend(docid.to_bytes(
-        8,
-        byteorder="little",
-        signed=False
-    ))
-    header_mmap.extend(keycnt.to_bytes(
-        8,
-        byteorder="little",
-        signed=False
-    ))
-    header_mmap.extend(b"\0\0\0\0\0\0\0\0")
-    fh.seek(0, 0)
-    fh.write(header_mmap)
-
-    # close temporary file handlers created by the function
-    # then return True
-    for ind in indices:
-        ind[1].close()
-    if index_bucket:
-        index_bucket.close()
-        index_bucket_seek.close()
-    return True
-
+    return True # success
 

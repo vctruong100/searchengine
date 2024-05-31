@@ -3,7 +3,6 @@
 # accept user inputs from this machine and
 # retrieves documents based on query
 
-# import query.abc
 import time
 import webbrowser
 import threading
