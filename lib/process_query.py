@@ -5,12 +5,12 @@
 import math
 from collections import defaultdict
 from nltk.stem import PorterStemmer
-from lib.reader import get_num_documents, get_postings
+from lib.reader import get_num_documents, get_postings, get_document
 
 def process_query(query, num_results):
     """Processes the query and returns the results.
 
-    :param query str: The query
+    :param query str: The query 
     :param num_results int: The number of results to return
     :return: The results
     :rtype: list
@@ -66,6 +66,9 @@ def process_query(query, num_results):
                 doc_weight = doc_tf
                 doc_vectors[posting.docid][word] = doc_weight
 
+    if query_length == 0:
+        return ["Query too common or not indexed."]
+        
     # Calculate the Euclidean norm (length) of the query vector
     # Euclidean norm = the square root of the sum of the squares of the weights
     query_length = math.sqrt(query_length)
@@ -79,7 +82,7 @@ def process_query(query, num_results):
         for weight in term_weights.values():
             doc_length += weight ** 2
         doc_length = math.sqrt(doc_length)
-
+            
         # Calculate the dot product of the query and document vectors
         for word, weight in term_weights.items():
             normalized_doc_weight = weight / doc_length
