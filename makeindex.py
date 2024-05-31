@@ -87,30 +87,25 @@ def make_partial(pagedir, partfh, partdoc):
                 urls_found.add(url) # add to urls found set to ensure no duplicate urls
 
 
-                ### Detection of duplicate pages ###
+                ### Detection of duplicate pages (EXACT) ###
+                ###
+                ### Note: We can determine exactness quickly by the content hash
+                ### However, we can't determine similarity yet unless we tokenize and count the words
+                ### Similarity is deferred after we do content extraction!!!!
 
                 # exact hashing
                 # if content matches, then skip the document
-                content_exact_hash = None
+                content_exact_hash = exact_hash(content)
                 if content_exact_hash in exact_hashes:
                     continue
                 exact_hashes.add(content_exact_hash) # add exact hash if no duplicates
 
-                # similar hashing
-                # if content is close to one of the hashes,
-                # then skip the document
-                is_similar = False
-                content_similar_hash = None
-                for hash in similar_hashes:
-                    if is_similar(content_similar_hash, hash):
-                        is_similar = True
-                        break
-                if is_similar:
-                    continue # similar to one of the indexed pages/docs
-                similar_hashes.add(content_similar_hash) # add similar hash if no similars
-
 
                 ### Content Extraction ###
+                ###
+                ### Extract content using bs4
+                ### This extracts regular test / important text
+                ### After extraction, memory used by soup is freed by decomposition
 
                 # soupify content
                 soup = BeautifulSoup(content, 'lxml')
@@ -155,6 +150,29 @@ def make_partial(pagedir, partfh, partdoc):
                 token_counts = word_count(tokens)
                 total_tokens = len(token_counts.items())
 
+
+                ### Detect duplicate pages (SIMILAR) ###
+                ###
+                ### Note: Similarity is placed here so that we can
+                ### use the word counts (token_counts)
+
+                # similar hashing
+                # if content is close to one of the hashes,
+                # then skip the document
+                is_similar = False
+                content_similar_hash = similar_hash(token_counts)
+                for hash in similar_hashes:
+                    if is_similar(content_similar_hash, hash):
+                        is_similar = True
+                        break
+                if is_similar:
+                    continue # similar to one of the indexed pages/docs
+                similar_hashes.add(content_similar_hash) # add similar hash if no similars
+
+
+                ### Populate postings and documents
+                ### if and only if the page is not a duplicate (exact, similar)
+
                 # Iterate over each token and its count and add a Posting to the inverted index
                 for token, count in token_counts.items():
                     # tf = term frequency of each individual token
@@ -174,9 +192,10 @@ def make_partial(pagedir, partfh, partdoc):
                     links=doclinks,
                 ))
 
-                # Periodically write the partial index to disk
-                if docid % doclimit == 0: # write for every 100 documents
-                    write_partial(inverted_index, docs, partfh, docfh)
+            # Periodically write the partial index to disk
+            if docid % doclimit == 0: # write for every 100 documents
+                write_partial(inverted_index, docs, partfh, docfh)
+                print(f"partial flush @ doc ID: {docid}", flush=True)
 
     # Final write for any remaining documents
     if inverted_index:

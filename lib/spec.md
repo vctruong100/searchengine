@@ -26,6 +26,7 @@ typedef struct posting {
 typedef struct document {
     u64 docid;
     u32 total_tokens;
+    f32 quality;        // static quality score g(d)
     struct str url;
 } Document;
 

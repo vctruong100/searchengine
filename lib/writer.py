@@ -289,3 +289,6 @@ def merge_partial(partfh, merge_filename, buckets_dir):
 
     return True # success
 
+
+def write_doc_auth():
+    """Updates the authority score
