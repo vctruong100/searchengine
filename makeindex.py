@@ -127,7 +127,7 @@ def make_partial(pagedir, partfh, partdoc):
                 # and mark (highlighted) text
                 important_tags = soup.find_all([
                     'h1', 'h2', 'h3', 'h4',
-                    'b', 'strong', 'mark',
+                    'b', 'strong', 'mark', 'title',
                 ])
                 for itag in important_tags:
                     important_text = itag.get_text()
@@ -177,7 +177,6 @@ def make_partial(pagedir, partfh, partdoc):
                 # Periodically write the partial index to disk
                 if docid % doclimit == 0: # write for every 100 documents
                     write_partial(inverted_index, docs, partfh, docfh)
-                    print(f"partial flush @ doc ID: {docid}", flush=True)
 
     # Final write for any remaining documents
     if inverted_index:
@@ -274,7 +273,7 @@ if __name__ == "__main__":
     # optional arg: keep partial
     if sys.argv[dirarg] == "--keep-partial" or sys.argv[dirarg] == "-p":
         # keep partial file
-        keep_partal = True
+        keep_partial = True
         dirarg += 1
 
     try:

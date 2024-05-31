@@ -18,11 +18,11 @@ _MERGEINFO_TOTAL_TOKENS = 0
 
 _initialized = False
 
-
 def initialize(docinfo_filename, mergeinfo_filename, buckets_dir):
     """Initializes the reader by opening index files
     from the docinfo, mergeinfo, and the buckets directories.
     """
+    global _initialized
     if _initialized:
         return
 
@@ -65,12 +65,12 @@ def initialize(docinfo_filename, mergeinfo_filename, buckets_dir):
                 seekfh.seek(0, 2)
                 seekend = seekfh.tell()
                 seekfh.seek(0, 0)
-                while seek.tell() != seekend:
+                while seekfh.tell() != seekend:
                     # store entire seek file in memory
                     token, _ = sstr_rd(seekfh)
                     offset, _ = u32_rd(seekfh)
                     _INDEX_SEEK[bid][token] = offset
-                seekfile.close()
+                seekfh.close()
 
     _initialized = True # initialized successfully
 
@@ -102,10 +102,13 @@ def get_postings(token):
     """
     if not token:
         return []
-    bid = min(ord(token[0], 128)
+    bid = min(ord(token[0]), 128)
 
+    print("bid", bid)
+    print("_INDEX_SEEK", _INDEX_SEEK)
     seekbucket = _INDEX_SEEK.get(bid, None)
-    if not seek_bucket:
+    print("seekbucket", seekbucket)
+    if not seekbucket:
         return []
 
     seekoffset = seekbucket.get(token, None)

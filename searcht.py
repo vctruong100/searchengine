@@ -1,13 +1,17 @@
-# search_logic.py
+# search.py
 #
-# This module contains the logic for processing search queries.
+# accept user inputs from this machine and
+# retrieves documents based on query
 
+# import query.abc
+import sys
 import math
-from collections import defaultdict
+import time
 from nltk.stem import PorterStemmer
-from lib.reader import get_num_documents, get_postings
+from collections import defaultdict
+from lib.reader import get_num_documents, get_postings, initialize, get_document
 
-def process_query(query, num_results):
+def process_query(query):
     """Processes the query and returns the results.
 
     :param query str: The query
@@ -21,10 +25,13 @@ def process_query(query, num_results):
     stemmed_words = [stemmer.stem(word) for word in query]
     doc_count = get_num_documents()
 
+    print("stemmed_words", stemmed_words)
+
     postings = {}
     doc_sets = []
     for word in stemmed_words:
         posting_list = get_postings(word)  # retrieve the posting
+        print("posting_list", posting_list)
         if posting_list:
             postings[word] = posting_list
 
@@ -33,6 +40,8 @@ def process_query(query, num_results):
 
     if not doc_sets:
         return []
+
+    print("doc_sets", doc_sets)
 
     # Find the intersection of documents that contain all terms
     common_docs = set.intersection(*doc_sets)
@@ -97,11 +106,42 @@ def process_query(query, num_results):
 
     # Format output to include rankings, URLs, and scores
     results = []
-    for rank, (doc_id, score) in enumerate(ranked_docs[:num_results], 1):
+    for rank, (doc_id, score) in enumerate(ranked_docs[:5], 1):  # Limit results to top 10
         document = get_document(doc_id)
         url = document.url if document else "URL not found"
         result = f'{rank}. <a href="{url}" target="_blank">{url}</a> (Score: {score:.2f})'
         results.append(result)
 
-    print(results)
     return results
+
+
+def run_server():
+    """Runs the server as a long running process
+    that constantly accepts user input (from the local machine).
+    """
+    while True:
+        query = input("Enter query:")
+        # do query work
+        if not query:
+            continue
+        start_time = time.time_ns()  # Start timing using time_ns() for higher precision
+        results = process_query(query)
+        for result in results:
+            print(result)
+
+        end_time = time.time_ns()  # End timing
+        query_time = (end_time - start_time) / 1_000_000  # Convert nanoseconds to milliseconds
+        print(f"Query time: {query_time:.2f} milliseconds")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 1:
+        print(USAGE_MSG)
+        sys.exit(1)
+
+    initialize(
+        docinfo_filename='index/.docinfo',
+        mergeinfo_filename='index/.mergeinfo',
+        buckets_dir='index'
+    )
+
+    run_server()
