@@ -65,8 +65,6 @@ def make_partial(pagedir, partfh, partdoc):
 
                 if not content:
                     continue # empty content
-                
-                print(f"partial flush @ doc ID: {docid}", flush=True)
 
                 soup = BeautifulSoup(content, 'lxml')
                 important_tokens = set()
