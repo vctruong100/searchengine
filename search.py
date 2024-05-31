@@ -10,6 +10,7 @@ import os
 import sys
 from flask import Flask, request, render_template
 from lib.process_query import process_query
+from lib.reader import initialize
 
 app = Flask(__name__)
 
@@ -41,6 +42,16 @@ def open_browser():
 if __name__ == "__main__":
     if len(sys.argv) != 1:
         print(USAGE_MSG)
+        sys.exit(1)
+
+    try:
+        initialize(
+            docinfo_filename='index/.docinfo',
+            mergeinfo_filename='index/.mergeinfo',
+            buckets_dir='index'
+        )
+    except Exception as e:
+        print(f"Failed to initialize reader: {e}")
         sys.exit(1)
 
     # Check WERKZEUG_RUN_MAIN Environment Variable to ensure
