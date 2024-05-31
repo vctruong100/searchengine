@@ -5,7 +5,7 @@
 import math
 from collections import defaultdict
 from nltk.stem import PorterStemmer
-from lib.reader import get_num_documents, get_postings, get_url
+from lib.reader import get_num_documents, get_postings
 
 def process_query(query, num_results):
     """Processes the query and returns the results.
@@ -98,8 +98,10 @@ def process_query(query, num_results):
     # Format output to include rankings, URLs, and scores
     results = []
     for rank, (doc_id, score) in enumerate(ranked_docs[:num_results], 1):
-        url = get_url(doc_id)
+        document = get_document(doc_id)
+        url = document.url if document else "URL not found"
         result = f'{rank}. <a href="{url}" target="_blank">{url}</a> (Score: {score:.2f})'
         results.append(result)
 
+    print(results)
     return results
