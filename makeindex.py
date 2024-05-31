@@ -75,12 +75,14 @@ def make_partial(pagedir, partfh, partdoc):
                 text = "" # possibly free up memory
 
                 # extract important text
-                important_text = soup.find_all([
+                important_tags = soup.find_all([
                     'h1', 'h2', 'h3', 'h4',
                     'strong', 'i', 'em', 'mark'
-                ]).get_text()
-                important_tokens.update(tokenize(important_text, n=1)[0])
-                important_text = "" # possibly free up memory
+                ])
+                for itag in important_tags:
+                    important_text = itag.get_text()
+                    important_tokens.update(tokenize(important_text, n=1)[0])
+                    important_text = "" # possibly free up memory
 
                 # free up memory from soup
                 soup.decompose()
@@ -89,7 +91,7 @@ def make_partial(pagedir, partfh, partdoc):
                 extend_tokens_from_ngrams(tokens, ngrams_col)
                 stem_tokens(tokens)
 
-                token_counts = word_count(stemmed_tokens)
+                token_counts = word_count(tokens)
                 total_tokens = len(token_counts.items())
 
                 # Iterate over each token and its count and add a Posting to the inverted index
