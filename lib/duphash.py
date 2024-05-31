@@ -88,7 +88,8 @@ def exact_hash(content):
     """
     if type(content) == str:
         content = content.encode('utf-8') # encode str to utf-8
-    return _crc32(content) + len(content).to_bytes(4, 'little')
+    crc_hash = _crc32(content)
+    return crc_hash.to_bytes(4, 'little') + len(content).to_bytes(4, 'little')
 
 
 ### SIMILAR HASHING (FROM SCRATCH)
