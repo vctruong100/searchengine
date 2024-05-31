@@ -15,7 +15,7 @@ from collections import defaultdict # simplify and speed up Posting insertion
 from json import load
 from nltk.stem import PorterStemmer
 from hashlib import sha256
-from urllib import urldefrag, urljoin
+from urllib.parse import urldefrag, urljoin
 
 from lib.duphash import * # similar / exact hashing from scratch
 from lib.tokenize import *
