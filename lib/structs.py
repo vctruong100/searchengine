@@ -2,6 +2,8 @@
 #
 # helpers for reading/writing structs in binary files
 
+import struct
+
 def sstr_rd(fh):
     """read struct str
     """
@@ -51,4 +53,17 @@ def u64_repr(obj):
     """byte repr of u64
     """
     return obj.to_bytes(8, byteorder='little', signed=False)
+
+
+def f32_rd(fh):
+    """read f32
+    """
+    return struct.unpack('<f', fh.read(4)), 4
+
+
+def f32_repr(obj):
+    """byte repr of f32
+    """
+    return struct.pack('<f', obj)
+
 

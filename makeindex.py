@@ -9,10 +9,15 @@ import os
 import sys
 import time
 import itertools
+
 from bs4 import BeautifulSoup
 from collections import defaultdict # simplify and speed up Posting insertion
 from json import load
 from nltk.stem import PorterStemmer
+from hashlib import sha256
+from urllib import urldefrag, urljoin
+
+from lib.duphash import * # similar / exact hashing from scratch
 from lib.tokenize import *
 from lib.word_count import word_count
 from lib.posting import Posting
@@ -47,25 +52,67 @@ def make_partial(pagedir, partfh, partdoc):
     inverted_index = defaultdict(list)
     docs = []
 
+    # USED FOR DETECTING DUPLICATE PAGES
+    urls_found = set()
+    exact_hashes = set()
+    similar_hashes = set()
+
     start_time = time.time()
 
     # recursively walk the pages directory
     for root, _, files in os.walk(dir):
         for file in files:
             if file.endswith(".json"):
+                # Note: Whenever a document is skipped (as duplicate or empty content):
+                # docid still counts towards that document,
+                # but the document will be empty (effectively removed from the index)
                 docid += 1
                 if docid <= partdoc:
-                    continue # already written
+                    continue # already written; skip
+
+                ### Read JSON file ###
 
                 path = os.path.join(root, file)
                 with open(path, 'r', encoding='utf-8') as pagefh:
                     jsond = load(pagefh)
                     content = jsond.get('content', '').strip()
-                    url = jsond.get('url', '')
+                    url = urldefrag(jsond.get('url', ''))
 
                 if not content:
-                    continue # empty content
+                    continue # empty content; skip
 
+                # url duplicates after defragging?
+                if url in urls_found:
+                    continue # url exists (after defragging)
+                urls_found.add(url) # add to urls found set to ensure no duplicate urls
+
+
+                ### Detection of duplicate pages ###
+
+                # exact hashing
+                # if content matches, then skip the document
+                content_exact_hash = None
+                if content_exact_hash in exact_hashes:
+                    continue
+                exact_hashes.add(content_exact_hash) # add exact hash if no duplicates
+
+                # similar hashing
+                # if content is close to one of the hashes,
+                # then skip the document
+                is_similar = False
+                content_similar_hash = None
+                for hash in similar_hashes:
+                    if is_similar(content_similar_hash, hash):
+                        is_similar = True
+                        break
+                if is_similar:
+                    continue # similar to one of the indexed pages/docs
+                similar_hashes.add(content_similar_hash) # add similar hash if no similars
+
+
+                ### Content Extraction ###
+
+                # soupify content
                 soup = BeautifulSoup(content, 'lxml')
                 important_tokens = set()
 
@@ -77,7 +124,7 @@ def make_partial(pagedir, partfh, partdoc):
                 # extract important text
                 #
                 # bold text, headings up to h4 (h4 is similar to bold)
-                # and mark (or highlighted) text
+                # and mark (highlighted) text
                 important_tags = soup.find_all([
                     'h1', 'h2', 'h3', 'h4',
                     'b', 'strong', 'mark',
@@ -86,6 +133,17 @@ def make_partial(pagedir, partfh, partdoc):
                     important_text = itag.get_text()
                     important_tokens.update(tokenize(important_text, n=1)[0])
                     important_text = "" # possibly free up memory
+
+                # extract links
+                #
+                # store them as a list of adjacent edges
+                # these are stored as sha-256 hashes (32 bytes)
+                #
+                # these are used to determine the static quality score (hits or pagerank)
+                doclinks = set()
+                for link in soup.find_all('a', href=True):
+                    link = urldefrag(urljoin(url, link))
+                    doclinks.add(link)
 
                 # free up memory from soup
                 soup.decompose()
@@ -103,7 +161,7 @@ def make_partial(pagedir, partfh, partdoc):
                     posting = Posting(
                         docid=docid,
                         tf=count,
-                        important=token in important_tokens
+                        important=token in important_tokens,
                     )
                     inverted_index[token].append(posting)
 
@@ -112,7 +170,8 @@ def make_partial(pagedir, partfh, partdoc):
                 docs.append(Document(
                     docid=docid,
                     url=url,
-                    total_tokens=total_tokens
+                    total_tokens=total_tokens,
+                    links=doclinks,
                 ))
 
                 # Periodically write the partial index to disk
