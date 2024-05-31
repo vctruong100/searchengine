@@ -75,9 +75,12 @@ def make_partial(pagedir, partfh, partdoc):
                 text = "" # possibly free up memory
 
                 # extract important text
+                #
+                # bold text, headings up to h4 (h4 is similar to bold)
+                # and mark (or highlighted) text
                 important_tags = soup.find_all([
                     'h1', 'h2', 'h3', 'h4',
-                    'strong', 'i', 'em', 'mark'
+                    'b', 'strong', 'mark',
                 ])
                 for itag in important_tags:
                     important_text = itag.get_text()
