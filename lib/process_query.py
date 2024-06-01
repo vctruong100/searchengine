@@ -218,6 +218,9 @@ def format_results(doc_scores, num_results):
     for rank, (doc_id, score) in enumerate(ranked_docs[:num_results], 1):
         document = get_document(doc_id)
         url = document.url if document else "URL not found"
+        if isinstance(score, np.ndarray):
+            score = score.item()  # Convert numpy array to scalar
+
         result = f'{rank}. <a href="{url}" target="_blank">{url}</a> (Score: {score:.2f})'
         results.append(result)
 

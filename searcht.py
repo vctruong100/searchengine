@@ -166,10 +166,14 @@ def format_results(doc_scores):
 
     # Format output to include rankings, URLs, and scores
     results = []
-    for rank, (doc_id, score) in enumerate(ranked_docs[:5], 1):  # Limit results to top 10
+    for rank, (doc_id, score) in enumerate(ranked_docs[:5], 1):
         document = get_document(doc_id)
         url = document.url if document else "URL not found"
-        result = f'{rank}. <a href="{url}" target="_blank">{url}</a> (Score: {score:.2f})'
+
+        if isinstance(score, np.ndarray):
+            score = score.item()  # Convert numpy array to scalar
+
+        result = f'Rank {rank}: {url} (Score: {score:.2f})'
         results.append(result)
 
     return results
@@ -210,7 +214,7 @@ def process_query(query):
         'hub_score': np.max(hub_scores) if hub_scores else 0,
         'auth_score': np.max(auth_scores) if auth_scores else 0
     }
-    
+
     print(max_scores)
     doc_vectors, query_vector, query_length = calculate_document_scores(query, postings, common_docs, doc_count)
 
@@ -224,6 +228,7 @@ def process_query(query):
     doc_scores = compute_cosine_similarity(doc_vectors, query_vector, query_length, max_scores)
 
     return format_results(doc_scores)
+
 
 def run_server():
     """Runs the server as a long running process
