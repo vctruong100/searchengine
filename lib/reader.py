@@ -111,6 +111,7 @@ def initialize_doclinks(doclinks_filename):
     if _initialized_docs:
         return
 
+    global _DOCINFO
     global _DOCLINKS
     global _DOCLINKS_INDEX
 
@@ -132,7 +133,7 @@ def initialize_doclinks(doclinks_filename):
                 url, _ = sstr_rd(doclinksfh)
                 docid = _DOCINFO_LINKS_INDEX.get(url, None)
                 if docid:
-                    document = _DOCINFO[docid]
+                    document = _DOCINFO[docid - 1]
                     if document and not document.empty:
                         urlset.add(docid)
             _DOCLINKS.append(urlset)
