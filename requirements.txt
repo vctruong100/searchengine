@@ -2,3 +2,4 @@ lxml
 beautifulsoup4
 nltk
 flask
+numpy
