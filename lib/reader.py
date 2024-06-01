@@ -107,16 +107,16 @@ def initialize_doclinks(doclinks_filename):
         doclinksend = doclinksfh.tell()
         doclinksfh.seek(0, 0)
         while doclinksfh.tell() != doclinksend:
-            docid = u64_rd(doclinksfh)
+            docid, _ = u64_rd(doclinksfh)
             for _ in range(docid - len(_DOCLINKS) - 1):
                 # sparse document ids - append with empty set
                 _DOCLINKS.append(set())
 
             urlset = set()
-            num_urls = u32_rd(doclinksfh)
+            num_urls, _ = u32_rd(doclinksfh)
             for _ in range(num_urls):
                 # store url as docid if it exists and non-empty
-                url = sstr_rd(doclinksfh)
+                url, _ = sstr_rd(doclinksfh)
                 document = _DOCINFO_LINKS_INDEX.get(url, None)
                 if document and not document.empty:
                     urlset.add(document.docid)
