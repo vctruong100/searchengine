@@ -131,9 +131,10 @@ def initialize_doclinks(doclinks_filename):
                 # store url as docid if it exists and non-empty
                 url, _ = sstr_rd(doclinksfh)
                 docid = _DOCINFO_LINKS_INDEX.get(url, None)
-                document = _DOCINFO[docid]
-                if document and not document.empty:
-                    urlset.add(docid)
+                if docid:
+                    document = _DOCINFO[docid]
+                    if document and not document.empty:
+                        urlset.add(docid)
             _DOCLINKS.append(urlset)
 
     _initialized_docs = True # initialized successfully
