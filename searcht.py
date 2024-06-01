@@ -11,8 +11,9 @@ from nltk.stem import PorterStemmer
 from collections import defaultdict
 from lib.reader import get_num_nonempty_documents, get_postings, initialize, get_document
 from lib.indexfiles import *
+import numpy as np
 
-def calculate_net_relevance_score(doc, text_relevance):
+def calculate_net_relevance_score(doc, text_relevance, max_scores):
     """Calculate the Net Relevance Score for a single document using provided
     scores and weights.
 
@@ -192,12 +193,25 @@ def process_query(query):
     # Find the intersection of documents that contain all terms
     common_docs = set.intersection(*doc_sets)
 
-    max_scores = {
-        'page_rank': max((get_document(doc_id).pr_quality for doc_id in common_docs), default=0),
-        'hub_score': max((get_document(doc_id).hub_quality for doc_id in common_docs), default=0),
-        'auth_score': max((get_document(doc_id).auth_quality for doc_id in common_docs), default=0)
-    }
+    pr_scores = []
+    hub_scores = []
+    auth_scores = []
 
+    # Collect scores from each document in common_docs
+    for doc_id in common_docs:
+        doc = get_document(doc_id)
+        pr_scores.append(doc.pr_quality)
+        hub_scores.append(doc.hub_quality)
+        auth_scores.append(doc.auth_quality)
+
+    # Calculate max scores using numpy, ensure it handles empty lists
+    max_scores = {
+        'page_rank': np.max(pr_scores) if pr_scores else 0,
+        'hub_score': np.max(hub_scores) if hub_scores else 0,
+        'auth_score': np.max(auth_scores) if auth_scores else 0
+    }
+    
+    print(max_scores)
     doc_vectors, query_vector, query_length = calculate_document_scores(query, postings, common_docs, doc_count)
 
     if query_length == 0:
