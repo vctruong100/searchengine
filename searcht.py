@@ -34,16 +34,19 @@ def calculate_net_relevance_score(doc, text_relevance):
     normalized_auth = doc.auth_score / max_scores['auth_score'] if max_scores['auth_score'] > 0 else 0
 
     # Calculate NRS with normalized score (with weights)
-    quality = (w_pr * normalized_pr +
-               w_hub * normalized_hub +
-               w_auth * normalized_auth +
-               w_tr * text_relevance)
+    # quality = (w_pr * normalized_pr +
+    #            w_hub * normalized_hub +
+    #            w_auth * normalized_auth +
+    #            w_tr * text_relevance)
 
     # Calculate NRS without normalizing score (with weights)
     # quality = (w_pr * doc.page_rank +
     #            w_hub * doc.hub_score +
     #            w_auth * doc.auth_score +
     #            w_tr * text_relevance)
+
+    # Calculate NRS without weight but with normalization
+    quality = normalized_pr + normalized_hub + normalized_auth + text_relevance
 
     # Calculate NRS without weights or normalization
     # quality = doc.page_rank + doc.hub_score + doc.auth_score + text_relevance
