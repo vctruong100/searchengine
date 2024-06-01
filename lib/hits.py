@@ -3,6 +3,7 @@
 # Implements the HITS Algorithm for documents indexed.
 
 import numpy as np
+from lib.reader import get_linked_docids
 
 def initialize_scores(docs):
     # Store hub scores, initializing each score to 1; ensure that all docs start with equal weight
@@ -31,10 +32,9 @@ def hits_algorithm(docs, max_iter=100, tol=1e-6):
         # Hub scores = sum of the authority scores of the documents it links to
         # Auth scores = sum of the hub scores of the documents that link to it
         for doc in docs:
-            if not doc.links:
-                continue
-            new_hub_scores[doc.docid] = sum(authority_scores.get(link, 0) for link in doc.links)
-            new_authority_scores[doc.docid] = sum(hub_scores.get(link, 0) for link in doc.links)
+            linked_docs = get_linked_docids(doc.docid)
+            new_hub_scores[doc.docid] = sum(authority_scores.get(link, 0) for link in linked_docs)
+            new_authority_scores[doc.docid] = sum(hub_scores.get(link, 0) for link in linked_docs)
         
         # Normalize the new hub scores and auth scores to prevent values from escalating
         norm = np.sqrt(sum(score ** 2 for score in new_hub_scores.values()))

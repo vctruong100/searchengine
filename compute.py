@@ -26,7 +26,7 @@ def compute_scores():
     pr_scores = page_rank(documents)
     for doc in documents:
         doc.pr_quality = pr_scores.get(doc.docid, 0)  
-
+        
     # Compute HITS scores (Hub and Authority)
     hub_scores, auth_scores = hits_algorithm(documents)
     for doc in documents:
@@ -39,4 +39,6 @@ if __name__ == "__main__":
         print(USAGE_MSG)
         sys.exit(1)
 
+    print("Computing scores...")
     compute_scores()
+    print("Scores computed successfully.")

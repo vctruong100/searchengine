@@ -30,6 +30,9 @@ def calculate_net_relevance_score(doc, text_relevance, max_scores):
     w_tr = 0.25  # Weight for Textual Relevance
 
     # Normalize scores
+    print("Page Rank: ", doc.pr_quality)
+    print("Hub Score: ", doc.hub_quality)
+    print("Auth Score: ", doc.auth_quality)
     normalized_pr = doc.pr_quality / max_scores['page_rank'] if max_scores['page_rank'] > 0 else 0
     normalized_hub = doc.hub_quality / max_scores['hub_score'] if max_scores['hub_score'] > 0 else 0
     normalized_auth = doc.auth_quality / max_scores['auth_score'] if max_scores['auth_score'] > 0 else 0

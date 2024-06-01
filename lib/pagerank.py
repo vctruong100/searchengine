@@ -3,6 +3,7 @@
 # Implements the PageRank Algorithm for documents indexed.
 
 import numpy as np
+from lib.reader import get_linked_docids
 
 def page_rank(docs, damping=0.85, max_iter=100, tol=1e-6):
     """Calculate PageRank scores for documents.
@@ -24,18 +25,18 @@ def page_rank(docs, damping=0.85, max_iter=100, tol=1e-6):
     # Create a dictionary of docids and the set of docs that link to each
     link_structure = {doc.docid: set() for doc in docs}
     for doc in docs:
-        if doc.links: 
-            for link in doc.links:
-                if link in link_structure:
-                    link_structure[link].add(doc.docid)
-
+        linked_docids = get_linked_docids(doc.docid)  # Fetch linked doc IDs
+        for linked_docid in linked_docids:
+            if linked_docid in link_structure:
+                link_structure[linked_docid].add(doc.docid)
+            
     # Iterative calculation of page rank
     for iteration in range(max_iter):
         new_ranks = {}
         # Calculate each document's new rank
         for docid, linked_by in link_structure.items():
             # Sum the PageRank of each linking document divided by the number of links it has
-            rank_sum = sum(page_ranks[linking_docid] / len(docs[linking_docid].links) for linking_docid in linked_by)
+            rank_sum = sum(page_ranks[linking_docid] / len(get_linked_docids(linking_docid)) for linking_docid in linked_by)
             
             # Calculate the new rank using the damping factor
             new_ranks[docid] = (1 - damping) + (damping * rank_sum)
@@ -46,6 +47,5 @@ def page_rank(docs, damping=0.85, max_iter=100, tol=1e-6):
 
         # Update the PageRanks for the next iteration
         page_ranks = new_ranks
-
     return page_ranks
 
