@@ -12,13 +12,17 @@ from lib.document import *
 _INDEX_BUCKETS = {}
 _INDEX_SEEK = defaultdict(dict)
 _DOCINFO = []
+_DOCLINKS_INDEX = {}
 
 _MERGEINFO_DOCID = 0
 _MERGEINFO_TOTAL_TOKENS = 0
 
+_NONEMPTY_DOC_CNT = 0
+_EMPTY_DOC_CNT = 0
+
 _initialized = False
 
-def initialize(docinfo_filename, mergeinfo_filename, buckets_dir):
+def initialize(docinfo_filename, doclinks_filename, mergeinfo_filename, buckets_dir):
     """Initializes the reader by opening index files
     from the docinfo, mergeinfo, and the buckets directories.
     """
@@ -38,9 +42,13 @@ def initialize(docinfo_filename, mergeinfo_filename, buckets_dir):
                 _DOCINFO.append(Document(
                     docid=len(_DOCINFO) + 1,
                     url='',
-                    total_tokens=0
+                    total_tokens=0,
+                    empty=True
                 ))
+                _EMPTY_DOC_CNT += 1
             _DOCINFO.append(document)
+            _DOCLINKS_INDEX[document.url] = document.docid
+            _NONEMPTY_DOC_CNT += 1
 
     # parse mergeinfo - store mergeinfo file in memory
     with open(mergeinfo_filename, 'rb') as mergefh:
@@ -83,9 +91,21 @@ def get_total_tokens():
 
 
 def get_num_documents():
-    """Returns the number of documents indexed.
+    """Returns the total number of documents indexed.
     """
     return _MERGEINFO_DOCID
+
+
+def get_num_empty_documents():
+    """Returns the total number of empty documents indexed.
+    """
+    return _EMPTY_DOC_CNT
+
+
+def get_num_nonempty_documents():
+    """Returns the total number of non-empty documents indexed.
+    """
+    return _NONEMPTY_DOC_CNT
 
 
 def get_document(docid):
@@ -93,6 +113,13 @@ def get_document(docid):
     See 'lib/document.py' for the Document interface.
     """
     return _DOCINFO[docid - 1]
+
+
+def get_docid_from_url(url):
+    """Retrieves the docid from the URL string.
+    If URL does not have a docid, then returns None.
+    """
+    return _DOCLINKS_INDEX.get(url, None)
 
 
 def get_postings(token):

@@ -236,6 +236,7 @@ if __name__ == "__main__":
 
     initialize(
         docinfo_filename=DOCINFO_NAME,
+        doclinks_filename=DOCLINKS_NAME,
         mergeinfo_filename=MERGEINFO_NAME,
         buckets_dir=BUCKETS_DIR
     )
