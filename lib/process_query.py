@@ -1,4 +1,4 @@
-# search_logic.py
+# process_query.py
 #
 # This module contains the logic for processing search queries.
 
@@ -153,6 +153,7 @@ def process_query(query, num_results):
     :return: The results
     :rtype: list
     """
+    
     result = []
     stemmed_words = stem_query(query)
     doc_count = get_num_nonempty_documents()
