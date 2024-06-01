@@ -1,7 +1,9 @@
 # compute.py
 
 # Computes and assigns PageRank and HITS scores to indexed documents.
-from lib.page_rank import page_rank, update_document_scores
+
+import sys
+from lib.pagerank import page_rank
 from lib.hits import hits_algorithm
 from lib.reader import initialize, get_num_documents, get_document
 from lib.indexfiles import *

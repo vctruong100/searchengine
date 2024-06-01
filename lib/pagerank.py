@@ -1,4 +1,4 @@
-# lib/page_rank.py
+# lib/pagerank.py
 #
 # Implements the PageRank Algorithm for documents indexed.
 
@@ -24,9 +24,10 @@ def page_rank(docs, damping=0.85, max_iter=100, tol=1e-6):
     # Create a dictionary of docids and the set of docs that link to each
     link_structure = {doc.docid: set() for doc in docs}
     for doc in docs:
-        for link in doc.links:
-            if link in link_structure:
-                link_structure[link].add(doc.docid)
+        if doc.links: 
+            for link in doc.links:
+                if link in link_structure:
+                    link_structure[link].add(doc.docid)
 
     # Iterative calculation of page rank
     for iteration in range(max_iter):
