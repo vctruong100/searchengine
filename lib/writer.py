@@ -299,3 +299,45 @@ def merge_partial(partfh, merge_filename, buckets_dir):
 
     return True # success
 
+
+def update_doc_pr_quality(docinfo_filename, scores):
+    """Writes the pr_quality field of specified
+    documents based on the scores.
+
+    :param scores dict[int, float]: Mapping of docid to float score
+    """
+    with open(docinfo_filename, 'r+b') as docfh:
+        docid, _ = u64_rd(docfh)
+        _, _ = u32_rd(docfh)
+
+        # pr_quality
+        score = scores.get(docid, None)
+        if score != None:
+            docfh.write(f32_repr(score))
+
+        _, _ = f32_rd(docfh)
+        _, _ = f32_rd(docfh)
+        _, _ = sstr_rd(docfh)
+
+
+def update_doc_hits_quality(docinfo_filename, scores):
+    """Writes the hub_quality and auth_quality fields of
+    specified document based on the scores.
+    First score is interpreted as hub quality.
+    Second score is interpreted as authority quality.
+
+    :param scores dict[int, tuple]: Mapping of docid to 2-tuple float scores
+    """
+    with open(docinfo_filename, 'r+b') as docfh:
+        docid, _ = u64_rd(docfh)
+        _, _ = u32_rd(docfh)
+        _, _ = f32_rd(docfh)
+
+        # hub/auth_quality
+        score = scores.get(docid, None)
+        if score != None:
+            docfh.write(f32_repr(score[0]))
+            docfh.write(f32_repr(score[1]))
+
+        _, _ = sstr_rd(docfh)
+
