@@ -143,6 +143,8 @@ def compute_cosine_similarity(doc_vectors, query_vector, query_length, common_do
         quality = calculate_net_relevance_score(doc, cosine_similarity, max_scores)
         doc_scores[doc_id] = quality
 
+    return doc_scores
+    
 def format_results(doc_scores):
     """ Sort the document scores and format the results.
 
