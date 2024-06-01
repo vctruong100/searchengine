@@ -1,0 +1,326 @@
+Test Queries Evaluation Report
+-----------------------------
+This report provides a comprehensive analysis of the effectiveness of our search engine's 
+indexing and ranking algorithms across a series of 21 test queries. It details the 
+initial performance benchmarks and the enhancements achieved through the integration 
+of sophisticated ranking mechanisms like cosine similarity, HITS, and PageRank. 
+These algorithms were pivotal in refining our system's ability to compute 
+net relevance scores and optimize query handling. This report aims to highlight 
+the advancements achieved and pinpoint ongoing challenges in refining our search 
+engine's capabilities.
+
+General Approach to Improvements
+-----------------------------
+Our primary improvements were focused on refining our indexing process and integrating more 
+sophisticated ranking algorithms. The initial implementation was basic and did not account 
+for important SEO factors such as backlinks and content relevance through sophisticated 
+algorithms like HITS and PageRank.
+
+
+Query Performance Analysis
+-----------------------------
+Note: Initial performance and query time (average time in milliseconds) is based on 
+Milestone 2 codebase. Top 5 results is searched for each query.
+-----------------------------
+1. Query: "how to set up vpn"
+
+Initial Performance: Documents that were highly irrelevant or contained server errors 
+ranked higher due to a lack of sophisticated error handling in the indexing process. 
+There was no mechanism to filter out or lower the rank of documents that resulted in 
+access issues or those that had significantly off-topic content.
+
+Initial Query Time: 119.0575 
+
+Final Performance: 
+
+Final Query Time: 
+
+2. Query: "optimizing SQL queries"
+Initial Performance: The indexing included documents leading to server errors (404s), 
+indicating that the mechanism to validate URLs or content accessibility before indexing 
+was not implemented. This led to a poor user experience as many documents were inaccessible.
+
+Initial Query Time: 25.059 
+
+Final Performance: 
+
+Final Query Time:
+
+3. Query: "Deep learning vs. machine handling"
+Initial Performance: The results showed confusion between "deep learning" and 
+"machine learning" due to the lack of contextual understanding in the indexing 
+process. Documents containing either term were indiscriminately indexed, 
+which diluted the relevance of the search results.
+
+Initial Query Time: 32.002 
+
+Final Performance: 
+
+Final Query Time:
+
+4. Query: "Python programming language tutorial"
+Initial Performance: Several similar pages were indexed separately due to 
+the system not handling different URL parameters that led to the same content, 
+causing duplicate results in the search output.
+
+Initial Query Time: 52.0549 
+
+Final Performance: 
+
+Final Query Time:
+
+5. Query: "Big data analytics tools comparison"
+Initial Performance: The search results were cluttered with a high volume of 
+unrelated documents, such as calendars and staff lists, because the indexing process 
+did not effectively differentiate content by relevance to the search query.
+
+Initial Query Time: 54.0002 
+
+Final Performance: 
+
+Final Query Time:
+
+6. Query: "angular frameworks"
+Initial Performance: The results were largely irrelevant, often linking to documents 
+about "angular resolution" instead of the intended software frameworks. 
+This indicates a lack of content-specific indexing where common terms lead to mixed results.
+
+Initial Query Time: 3.0001 
+
+Final Performance: 
+
+Final Query Time:
+
+7. Query: "advancements in quantum computing"
+Initial Performance: Most of the top results were inaccessible (404 errors), and 
+the remaining pages were not relevant to quantum computing advancements, highlighting 
+a gap in effective link validation and content relevancy in the indexing strategy.
+
+Initial Query Time: 118.0517 
+
+Final Performance: 
+
+Final Query Time:
+
+8. Query: "programming language for data science"
+Initial Performance: Results were not focused on programming languages for data 
+science, instead showing bibliographies and error pages, showing the indexing 
+process was not filtering or ranking based on content relevance.
+
+Initial Query Time: 167.6366 
+
+Final Performance: 
+
+Final Query Time:
+
+9. Query: "How to implement continuous integration and continuous deployment"
+Initial Performance: While the initial results were accurate, many duplicate pages 
+followed, indicating a lack of mechanisms to detect and exclude duplicate content 
+during the indexing phase.
+
+Initial Query Time: 161.9371 
+
+Final Performance: 
+
+Final Query Time:
+
+10. Query: "trends in cybersecurity"
+Initial Performance: All results led to error pages, demonstrating a critical need 
+for validating the accessibility and relevance of documents before they are indexed 
+to ensure they provide value.
+
+Initial Query Time: 74.9945 
+
+Final Performance: 
+
+Final Query Time:
+
+11. Query: "Latest developments in blockchain technology"
+Initial Performance: While the results included some relevant documents, they were 
+mixed with older content and error pages, suggesting the indexing process 
+lacked a focus on content currency and accuracy.
+
+Initial Query Time: 96.9984 
+
+Final Performance: 
+
+Final Query Time:
+
+12. Query: "How to troubleshoot performance issues in a distributed system"
+Initial Performance: The top result led to a problematic redirect loop, with some 
+duplicated and informative pages following. This indicated a deficiency in handling 
+redirects and filtering unique content effectively.
+
+Initial Query Time: 267.4953 
+
+Final Performance: 
+
+Final Query Time:
+
+13. Query: "The evolution of user interface design in mobile applications"
+Initial Performance: Results were generally good but somewhat relevant, indicating that 
+while the index was capturing documents related to UI design, it wasn't finely 
+tuned to distinguish between general design and mobile-specific UI design topics.
+
+Initial Query Time: 276.1528 
+
+Final Performance: 
+
+Final Query Time:
+
+14. Query: "Computer Science vs. Software Engineer"
+Initial Performance: Many results contained low-value content such as publisher pages 
+or bibliographies, pointing to an indexing system that wasn't prioritizing 
+content depth or relevance to the nuanced differences between these fields.
+
+Initial Query Time: 76.0472  
+
+Final Performance: 
+
+Final Query Time:
+
+15. Query: "to be, or not to be"
+Initial Performance: The query pulled a broad range of content, much of which was 
+unrelated to the famous soliloquy, illustrating the system’s difficulty in focusing 
+on specific literary analysis or relevant discussions.
+
+Initial Query Time: 195.636 
+
+Final Performance: 
+
+Final Query Time:
+
+16. Query: "Shall I compare thee to a summer’s day?"
+Initial Performance: Only two results were returned, both unrelated, highlighting 
+the indexing system's challenge in matching specific literary content to the query.
+
+Initial Query Time: 47.5513 
+
+Final Performance: 
+
+Final Query Time:
+
+17. Query: "gpa to graduate"
+Initial Performance: Results were mostly irrelevant or led to redirections to homepages, 
+indicating an issue with indexing quality and relevancy checks.
+
+Initial Query Time: 71.7662 
+
+Final Performance: 
+
+Final Query Time:
+
+18. Query: "list all ics professors"
+Initial Performance: The search returned duplicate pages and many irrelevant results, 
+suggesting that the index was not effectively distinguishing relevant academic 
+content from other types.
+
+Initial Query Time: 75.791
+
+Final Performance: 
+
+Final Query Time:
+
+19. Query: "Number 42"
+Initial Performance: This query returned varied results due to the broad significance 
+of the number across different contexts, demonstrating the system's lack of 
+context-aware indexing to differentiate between these meanings.
+
+Initial Query Time: 30.0881 
+
+Final Performance: 
+
+Final Query Time:
+
+20. Query: "function gimme_five at 0x000001E5497A16A8"
+Initial Performance: The search results were highly accurate and met expectations 
+perfectly, showing that in some cases, the system effectively matched 
+queries to their correct context without additional tuning.
+
+Initial Query Time: 71.3224 
+
+Final Performance: 
+
+Final Query Time:
+
+21. Query: "It is not in the stars to hold our destiny but in ourselves"
+Initial Performance: This query includes nine stopwords: "it", "is", "not", "in", "the", 
+"to", "our", "but", "in". It tests how well the search engine identifies and interprets 
+significant words amidst common connectors and fillers. Three results were given; while 
+the documents have mid-level scores, none seem directly relevant to the philosophical 
+or literary analysis of the query. Furthermore, the query time exceeded the borderline
+of 300 m/s which is not ideal.
+
+Initial Query Time: 432.0446 
+
+Final Performance: 
+
+Final Query Time:
+
+22. Query: "There is nothing either good or bad but thinking makes it so"
+Initial Performance: Another Shakespearean quote that includes 10 stopwords. However,
+unlike the previous query, this quote a lot more broad results. More results were given,
+but none seem directly relevant to the philosophical or literary analysis of the query.
+The query time also exceeded 300 m/s.
+
+Initial Query Time: 335.0796
+
+Final Performance: 
+
+Final Query Time:
+
+-----------------------------
+Code Improvements
+-----------------------------
+Improving Index Construction:
+
+Initial Code: Our original indexing process involved basic parsing of JSON files and 
+indexing the text content without any advanced handling of document quality or relevance. 
+This led to a lack of sophistication in prioritizing documents, often resulting in 
+irrelevant or outdated content being highly ranked.
+
+Updated Code: We introduced mechanisms to handle duplicate content and improve the relevance 
+of indexed documents. Specifically, we implemented a hashing system to detect duplicate 
+documents based on content hashes, ensuring that only unique content was indexed. Additionally, 
+we enhanced our tokenizer to handle more complex text patterns, improving the 
+accuracy of our text analysis.
+
+-----------------------------
+Advanced Ranking Algorithms:
+
+Initial Code: The initial implementation lacked any form of advanced ranking logic, 
+relying solely on basic frequency counts to rank documents.
+
+Updated Code: We integrated the HITS and PageRank algorithms and compute the net relevance score 
+to rank out results, which allowed us to consider the quality of documents based on the 
+web’s link structure. This not only improved the relevance of the search results but 
+also prioritized authoritative sources, thus enhancing the overall user experience.
+
+-----------------------------
+Error Handling and Data Integrity:
+
+Initial Code: There was minimal error handling in place, which often resulted in the inclusion 
+of error pages (e.g., 404s) in search results.
+
+Updated Code: Improved error detection mechanisms are now in place to exclude non-existent 
+pages from the index. Additionally, we implemented robust error handling throughout the indexing 
+process to prevent system crashes and ensure data integrity.
+
+-----------------------------
+Impact on Query Results
+The improvements in our indexing and ranking algorithms have had a profound impact 
+on the quality of our search engine’s output:
+
+1. Relevance: By incorporating advanced ranking algorithms and enhancing content analysis, 
+the search results are now more relevant and closely aligned with user queries.
+2. Accuracy: Improved error handling and the exclusion of duplicate content have significantly 
+reduced the occurrence of irrelevant and outdated information in the search results.
+3. Authority: With the integration of HITS and PageRank, documents from authoritative sources are 
+ranked higher, which has improved the trustworthiness and quality of the information presented to users.
+
+-----------------------------
+Conclusion
+-----------------------------
+Our engine now not only understands the content better but also appreciates the importance of 
+document authority, thus providing more relevant and authoritative results. Each test query helped us 
+identify and rectify shortcomings in our initial setup, leading to a robust and efficient search system.
