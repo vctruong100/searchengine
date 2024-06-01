@@ -30,9 +30,6 @@ def calculate_net_relevance_score(doc, text_relevance, max_scores):
     w_tr = 0.25  # Weight for Textual Relevance
 
     # Normalize scores
-    print("Page Rank: ", doc.pr_quality)
-    print("Hub Score: ", doc.hub_quality)
-    print("Auth Score: ", doc.auth_quality)
     normalized_pr = doc.pr_quality / max_scores['page_rank'] if max_scores['page_rank'] > 0 else 0
     normalized_hub = doc.hub_quality / max_scores['hub_score'] if max_scores['hub_score'] > 0 else 0
     normalized_auth = doc.auth_quality / max_scores['auth_score'] if max_scores['auth_score'] > 0 else 0
@@ -59,7 +56,7 @@ def calculate_net_relevance_score(doc, text_relevance, max_scores):
 
 def stem_query(query):
     stemmer = PorterStemmer()
-    return [stemmer.stem(word) for word in query.split()]
+    return [stemmer.stem(word) for word in query.split() if not is_stopword(word)]
 
 def get_postings_for_query(stemmed_words):
     """Retrieve postings for the stemmed words in the query.
@@ -89,6 +86,8 @@ def calculate_document_scores(query, postings, common_docs, doc_count):
     :rtype: tuple
     """
 
+    PROMOTION_MUL = 1.2 # promoting multiplier for important text
+
     # map dictionary of docID to score
     doc_vectors = defaultdict(lambda: defaultdict(float))
     query_vector = defaultdict(float)
@@ -114,7 +113,10 @@ def calculate_document_scores(query, postings, common_docs, doc_count):
             else:
                 # Calculate logarithmic TF for document
                 doc_tf = 1 + math.log(posting.tf) if posting.tf > 0 else 0
+
                 doc_weight = doc_tf
+                if posting.fields['important']:
+                    doc_weight *= PROMOTION_MUL # promote important doc
                 doc_vectors[posting.docid][word] = doc_weight
     return doc_vectors, query_vector, query_length
 
@@ -218,11 +220,7 @@ def process_query(query):
         'auth_score': np.max(auth_scores) if auth_scores else 0
     }
 
-    print(max_scores)
     doc_vectors, query_vector, query_length = calculate_document_scores(query, postings, common_docs, doc_count)
-
-    if query_length == 0:
-        return ["Query too common or not indexed."]
 
     # Calculate the Euclidean norm (length) of the query vector
     # Euclidean norm = the square root of the sum of the squares of the weights

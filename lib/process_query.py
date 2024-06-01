@@ -53,7 +53,7 @@ def calculate_net_relevance_score(doc, text_relevance, max_scores):
 
 def stem_query(query):
     stemmer = PorterStemmer()
-    return [stemmer.stem(word) for word in query.split()]
+    return [stemmer.stem(word) for word in query.split() if not is_stopword(word)]
 
 def get_postings_for_query(stemmed_words):
     """Retrieve postings for the stemmed words in the query.
@@ -190,9 +190,6 @@ def process_query(query, num_results):
     }
 
     doc_vectors, query_vector, query_length = calculate_document_scores(query, postings, common_docs, doc_count)
-
-    if query_length == 0:
-        return ["Query too common or not indexed."]
 
     # Calculate the Euclidean norm (length) of the query vector
     # Euclidean norm = the square root of the sum of the squares of the weights

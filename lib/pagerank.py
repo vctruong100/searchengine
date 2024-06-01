@@ -5,7 +5,7 @@
 import numpy as np
 from lib.reader import get_linked_docids
 
-def page_rank(docs, damping=0.85, max_iter=100, tol=1e-6):
+def page_rank(docs, damping=0.85, max_iter=5, tol=1e-6):
     """Calculate PageRank scores for documents.
 
     :param docs: List of Document objects
