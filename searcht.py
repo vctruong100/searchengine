@@ -111,7 +111,7 @@ def calculate_document_scores(postings, common_docs, doc_count):
                 doc_vectors[posting.docid][word] = doc_weight
     return doc_vectors, query_vector, query_length
 
-def compute_cosine_similarity(doc_vectors, query_vector, query_length, common_docs, max_scores):
+def compute_cosine_similarity(doc_vectors, query_vector, query_length, max_scores):
     """ Compute the cosine similarity between the query and documents.
 
     :param doc_vectors dict: The document vectors
@@ -140,11 +140,12 @@ def compute_cosine_similarity(doc_vectors, query_vector, query_length, common_do
             normalized_query_weight = query_vector[word] / query_length
             cosine_similarity += normalized_doc_weight * normalized_query_weight
 
+        doc = get_document(doc_id)
         quality = calculate_net_relevance_score(doc, cosine_similarity, max_scores)
         doc_scores[doc_id] = quality
 
     return doc_scores
-    
+
 def format_results(doc_scores):
     """ Sort the document scores and format the results.
 
@@ -203,7 +204,7 @@ def process_query(query):
     # Euclidean norm = the square root of the sum of the squares of the weights
     query_length = math.sqrt(query_length)
 
-    doc_scores = compute_cosine_similarity(doc_vectors, query_vector, query_length, common_docs, max_scores)
+    doc_scores = compute_cosine_similarity(doc_vectors, query_vector, query_length, max_scores)
 
     return format_results(doc_scores)
 
