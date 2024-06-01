@@ -53,7 +53,3 @@ def hits_algorithm(docs, max_iter=100, tol=1e-6):
         hub_scores, authority_scores = new_hub_scores, new_authority_scores
 
     return hub_scores, authority_scores
-
-# Update the document scores with the hub and authority scores
-def update_document_scores(docs, hub_scores, authority_scores):
-    continue

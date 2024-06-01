@@ -48,6 +48,3 @@ def page_rank(docs, damping=0.85, max_iter=100, tol=1e-6):
 
     return page_ranks
 
-# Update the document scores with the PageRank scores
-def update_document_scores(docs, scores):
-    continue

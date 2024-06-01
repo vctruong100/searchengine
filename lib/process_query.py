@@ -5,7 +5,7 @@
 import math
 from collections import defaultdict
 from nltk.stem import PorterStemmer
-from lib.reader import get_num_documents, get_postings, get_document
+from lib.reader import get_num_nonempty_documents, get_postings, get_document
 
 def calculate_net_relevance_score(doc, text_relevance):
     """Calculate the Net Relevance Score for a single document using provided 
@@ -26,9 +26,9 @@ def calculate_net_relevance_score(doc, text_relevance):
     w_tr = 0.25  # Weight for Textual Relevance
 
     # Normalize scores
-    normalized_pr = doc.page_rank / max_scores['page_rank'] if max_scores['page_rank'] > 0 else 0
-    normalized_hub = doc.hub_score / max_scores['hub_score'] if max_scores['hub_score'] > 0 else 0
-    normalized_auth = doc.auth_score / max_scores['auth_score'] if max_scores['auth_score'] > 0 else 0
+    normalized_pr = doc.pr_quality / max_scores['page_rank'] if max_scores['page_rank'] > 0 else 0
+    normalized_hub = doc.hub_quality / max_scores['hub_score'] if max_scores['hub_score'] > 0 else 0
+    normalized_auth = doc.auth_quality / max_scores['auth_score'] if max_scores['auth_score'] > 0 else 0
 
     # # Calculate NRS with normalized score (with weights)
     # quality = (w_pr * normalized_pr +
@@ -155,7 +155,7 @@ def process_query(query, num_results):
     """
     result = []
     stemmed_words = stem_query(query)
-    doc_count = get_num_documents()
+    doc_count = get_num_nonempty_documents()
 
     postings, doc_sets = get_postings_for_query(stemmed_words)
 

@@ -9,7 +9,7 @@ import math
 import time
 from nltk.stem import PorterStemmer
 from collections import defaultdict
-from lib.reader import get_num_documents, get_postings, initialize, get_document
+from lib.reader import get_num_nonempty_documents, get_postings, initialize, get_document
 from lib.indexfiles import *
 
 def calculate_net_relevance_score(doc, text_relevance):
@@ -29,9 +29,9 @@ def calculate_net_relevance_score(doc, text_relevance):
     w_tr = 0.25  # Weight for Textual Relevance
 
     # Normalize scores
-    normalized_pr = doc.page_rank / max_scores['page_rank'] if max_scores['page_rank'] > 0 else 0
-    normalized_hub = doc.hub_score / max_scores['hub_score'] if max_scores['hub_score'] > 0 else 0
-    normalized_auth = doc.auth_score / max_scores['auth_score'] if max_scores['auth_score'] > 0 else 0
+    normalized_pr = doc.pr_quality / max_scores['page_rank'] if max_scores['page_rank'] > 0 else 0
+    normalized_hub = doc.hub_quality / max_scores['hub_score'] if max_scores['hub_score'] > 0 else 0
+    normalized_auth = doc.auth_quality / max_scores['auth_score'] if max_scores['auth_score'] > 0 else 0
 
     # Calculate NRS with normalized score (with weights)
     # quality = (w_pr * normalized_pr +
@@ -182,7 +182,7 @@ def process_query(query):
     """
     result = []
     stemmed_words = stem_query(query)
-    doc_count = get_num_documents()
+    doc_count = get_num_nonempty_documents()
 
     postings, doc_sets = get_postings_for_query(stemmed_words)
 
@@ -228,6 +228,8 @@ def run_server():
         end_time = time.time_ns()  # End timing
         query_time = (end_time - start_time) / 1_000_000  # Convert nanoseconds to milliseconds
         print(f"Query time: {query_time:.2f} milliseconds")
+
+USAGE_MSG = "usage: python searcht.py"
 
 if __name__ == "__main__":
     if len(sys.argv) != 1:
