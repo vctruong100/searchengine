@@ -58,7 +58,7 @@ def u64_repr(obj):
 def f32_rd(fh):
     """read f32
     """
-    return struct.unpack('<f', fh.read(4)), 4
+    return struct.unpack('<f', fh.read(4))[0], 4
 
 
 def f32_repr(obj):
