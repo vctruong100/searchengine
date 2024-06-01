@@ -75,7 +75,7 @@ def get_postings_for_query(stemmed_words):
             doc_sets.append(set(posting.docid for posting in posting_list))
     return postings, doc_sets
 
-def calculate_document_scores(postings, common_docs, doc_count):
+def calculate_document_scores(query, postings, common_docs, doc_count):
     """Calculate the document scores based on the query.
 
     :param postings dict: The postings for the query terms
@@ -198,7 +198,7 @@ def process_query(query):
         'auth_score': max((get_document(doc_id).auth_quality for doc_id in common_docs), default=0)
     }
 
-    doc_vectors, query_vector, query_length = calculate_document_scores(postings, common_docs, doc_count)
+    doc_vectors, query_vector, query_length = calculate_document_scores(query, postings, common_docs, doc_count)
 
     if query_length == 0:
         return ["Query too common or not indexed."]
