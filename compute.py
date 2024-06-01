@@ -6,6 +6,7 @@ import sys
 from lib.pagerank import page_rank
 from lib.hits import hits_algorithm
 from lib.reader import initialize, get_num_documents, get_document, initialize_doclinks
+from lib.writer import update_doc_pr_quality, update_doc_hits_quality
 from lib.indexfiles import *
 
 USAGE_MSG = "usage: python compute.py"
@@ -26,15 +27,13 @@ def compute_scores():
 
     # Compute PageRank scores
     pr_scores = page_rank(documents)
-    for doc in documents:
-        doc.pr_quality = pr_scores.get(doc.docid, 0)  
+    update_doc_pr_quality(DOCINFO_NAME, pr_scores)
+
         
     # Compute HITS scores (Hub and Authority)
     hub_scores, auth_scores = hits_algorithm(documents)
-    for doc in documents:
-        doc.hub_quality = hub_scores.get(doc.docid, 0)
-        doc.auth_quality = auth_scores.get(doc.docid, 0) 
-
+    hits_scores = {doc_id: (hub_scores.get(doc_id, 0), auth_scores.get(doc_id, 0)) for doc_id in hub_scores}  
+    update_doc_hits_quality(DOCINFO_NAME, hits_scores)
 
 if __name__ == "__main__":
     if len(sys.argv) != 1:

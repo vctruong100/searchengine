@@ -6,6 +6,7 @@ import math
 from collections import defaultdict
 from nltk.stem import PorterStemmer
 from lib.reader import get_num_nonempty_documents, get_postings, get_document
+from lib.stopwords import is_stopword
 import numpy as np
 
 def calculate_net_relevance_score(doc, text_relevance, max_scores):

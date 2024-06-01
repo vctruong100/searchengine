@@ -10,6 +10,7 @@ import time
 from nltk.stem import PorterStemmer
 from collections import defaultdict
 from lib.reader import get_num_nonempty_documents, get_postings, initialize, get_document
+from lib.stopwords import is_stopword
 from lib.indexfiles import *
 import numpy as np
 
