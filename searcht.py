@@ -7,12 +7,14 @@
 import sys
 import math
 import time
+import numpy as np
 from nltk.stem import PorterStemmer
 from collections import defaultdict
 from lib.reader import get_num_nonempty_documents, get_postings, initialize, get_document
 from lib.stopwords import is_stopword
 from lib.indexfiles import *
-import numpy as np
+from lib.tokenize import *
+import lib.queryproc as queryproc
 
 def calculate_net_relevance_score(doc, text_relevance, max_scores):
     """Calculate the Net Relevance Score for a single document using provided
@@ -49,6 +51,8 @@ def calculate_net_relevance_score(doc, text_relevance, max_scores):
 
     # Calculate NRS without weight but with normalization
     quality = normalized_pr + normalized_hub + normalized_auth + text_relevance
+
+    print(normalized_pr, normalized_hub, normalized_auth, text_relevance)
 
     # Calculate NRS without weights or normalization
     # quality = doc.page_rank + doc.hub_score + doc.auth_score + text_relevance
@@ -192,10 +196,12 @@ def process_query(query):
     :rtype: list
     """
     result = []
-    stemmed_words = stem_query(query)
+
+    tokens, _ = tokenize(query)
+    stem_tokens(tokens)
     doc_count = get_num_nonempty_documents()
 
-    postings, doc_sets = get_postings_for_query(stemmed_words)
+    postings, doc_sets = get_postings_for_query(tokens)
 
     if not doc_sets:
         return []
@@ -241,12 +247,14 @@ def run_server():
         # do query work
         if not query:
             continue
+
         start_time = time.time_ns()  # Start timing using time_ns() for higher precision
-        results = process_query(query)
-        for result in results:
+        result = queryproc.process_query(query)
+        end_time = time.time_ns()  # End timing
+
+        for result in queryproc.format_results_tty(result, 5):
             print(result)
 
-        end_time = time.time_ns()  # End timing
         query_time = (end_time - start_time) / 1_000_000  # Convert nanoseconds to milliseconds
         print(f"Query time: {query_time:.2f} milliseconds")
 

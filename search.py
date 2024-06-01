@@ -9,7 +9,7 @@ import threading
 import os
 import sys
 from flask import Flask, request, render_template
-from lib.process_query import process_query
+from lib.queryproc import process_query, format_results_web
 from lib.reader import initialize
 from lib.indexfiles import *
 
@@ -32,8 +32,9 @@ def search():
             num_results = int(num_results)
 
         start_time = time.time_ns()
-        results = process_query(query, num_results)
+        result = process_query(query)
         end_time = time.time_ns()
+        results = format_results_web(result, num_results)
         query_time = (end_time - start_time) / 1_000_000
     return render_template('search.html', results=results, query_time=query_time, query=query)
 
