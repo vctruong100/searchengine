@@ -111,7 +111,7 @@ def calculate_document_scores(query, postings, common_docs, doc_count):
                 # Calculate logarithmic TF for document
                 doc_tf = 1 + math.log(posting.tf) if posting.tf > 0 else 0
                 doc_weight = doc_tf
-                if posting.important:
+                if posting.fields['important']:
                     doc_weight *= PROMOTION_MUL # promote important doc
                 doc_vectors[posting.docid][word] = doc_weight
     return doc_vectors, query_vector, query_length
