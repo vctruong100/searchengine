@@ -3,6 +3,7 @@
 # Computes and assigns PageRank and HITS scores to indexed documents.
 
 import sys
+import time
 from lib.pagerank import page_rank
 from lib.hits import hits_algorithm
 from lib.reader import initialize, get_num_documents, get_document, initialize_doclinks
@@ -29,7 +30,6 @@ def compute_scores():
     pr_scores = page_rank(documents)
     update_doc_pr_quality(DOCINFO_NAME, pr_scores)
 
-        
     # Compute HITS scores (Hub and Authority)
     hub_scores, auth_scores = hits_algorithm(documents)
     hits_scores = {doc_id: (hub_scores.get(doc_id, 0), auth_scores.get(doc_id, 0)) for doc_id in hub_scores}  
@@ -41,5 +41,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     print("Computing scores...")
+    start = time.time()
     compute_scores()
     print("Scores computed successfully.")
+    end = time.time()
+    print(f"Time taken: {end - start:.2f} seconds")
