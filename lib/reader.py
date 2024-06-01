@@ -11,8 +11,10 @@ from lib.document import *
 
 _INDEX_BUCKETS = {}
 _INDEX_SEEK = defaultdict(dict)
+
 _DOCINFO = []
-_DOCLINKS_INDEX = {}
+_DOCINFO_LINKS_INDEX = {}
+_DOCLINKS = []
 
 _MERGEINFO_DOCID = 0
 _MERGEINFO_TOTAL_TOKENS = 0
@@ -21,8 +23,10 @@ _NONEMPTY_DOC_CNT = 0
 _EMPTY_DOC_CNT = 0
 
 _initialized = False
+_initialized_docs = False
 
-def initialize(docinfo_filename, doclinks_filename, mergeinfo_filename, buckets_dir):
+
+def initialize(docinfo_filename, mergeinfo_filename, buckets_dir):
     """Initializes the reader by opening index files
     from the docinfo, mergeinfo, and the buckets directories.
     """
@@ -47,7 +51,7 @@ def initialize(docinfo_filename, doclinks_filename, mergeinfo_filename, buckets_
                 ))
                 _EMPTY_DOC_CNT += 1
             _DOCINFO.append(document)
-            _DOCLINKS_INDEX[document.url] = document.docid
+            _DOCINFO_LINKS_INDEX[document.url] = document.docid
             _NONEMPTY_DOC_CNT += 1
 
     # parse mergeinfo - store mergeinfo file in memory
@@ -83,6 +87,44 @@ def initialize(docinfo_filename, doclinks_filename, mergeinfo_filename, buckets_
     _initialized = True # initialized successfully
 
 
+def initialize_doclinks(doclinks_filename):
+    """Initializes each docid with the set of URLs crawled.
+    If URL is not contained within the documents or the
+    document is not empty, then it is not included in the set.
+
+    Note: You should only call this function when you are doing
+    pagerank / HITS computations. The search engine does not need this.
+    """
+    global _initialized
+    global _initialized_docs
+    assert _initialized, "call reader.initialize() before calling this"
+    if _initialized_docs:
+        return
+
+    # read doclinks
+    with open(doclinks_filename) as doclinksfh:
+        doclinksfh.seek(2, 0)
+        doclinksend = doclinksfh.tell()
+        doclinksfh.seek(0, 0)
+        while doclinksfh.tell() != doclinksend:
+            docid = u64_rd(doclinksfh)
+            for _ in range(docid - len(_DOCLINKS) - 1):
+                # sparse document ids - append with empty set
+                _DOCLINKS.append(set())
+
+            urlset = set()
+            num_urls = u32_rd(doclinksfh)
+            for _ in range(num_urls):
+                # store url as docid if it exists and non-empty
+                url = sstr_rd(doclinksfh)
+                document = _DOCINFO_LINKS_INDEX.get(url, None)
+                if document and not document.empty:
+                    urlset.add(document.docid)
+            _DOCLINKS.append(urlset)
+
+    _initialized_docs = True # initialized successfully
+
+
 def get_total_tokens():
     """Returns the total number of unique tokens
     across the entire set of documents.
@@ -115,11 +157,12 @@ def get_document(docid):
     return _DOCINFO[docid - 1]
 
 
-def get_docid_from_url(url):
-    """Retrieves the docid from the URL string.
-    If URL does not have a docid, then returns None.
+def get_linked_docids(docid):
+    """Returns reachable documents as a set of docids from this
+    particular document. Note that reachable means its URL exists
+    in the document content.
     """
-    return _DOCLINKS_INDEX.get(url, None)
+    return _DOCLINKS[docid - 1]
 
 
 def get_postings(token):

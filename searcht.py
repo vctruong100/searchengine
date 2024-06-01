@@ -13,9 +13,9 @@ from lib.reader import get_num_documents, get_postings, initialize, get_document
 from lib.indexfiles import *
 
 def calculate_net_relevance_score(doc, text_relevance):
-    """Calculate the Net Relevance Score for a single document using provided 
+    """Calculate the Net Relevance Score for a single document using provided
     scores and weights.
-    
+
     :param doc Document: The document
     :param text_relevance float: The textual relevance score
     :return: The net relevance score
@@ -50,7 +50,7 @@ def calculate_net_relevance_score(doc, text_relevance):
 
     # Calculate NRS without weights or normalization
     # quality = doc.page_rank + doc.hub_score + doc.auth_score + text_relevance
-    
+
     return quality
 
 def stem_query(query):
@@ -77,14 +77,14 @@ def get_postings_for_query(stemmed_words):
 
 def calculate_document_scores(postings, common_docs, doc_count):
     """Calculate the document scores based on the query.
-    
+
     :param postings dict: The postings for the query terms
     :param common_docs set: The set of documents that contain all query terms
     :param doc_count int: The total number of documents
     :return: The document vectors, query vector, and query length
     :rtype: tuple
     """
-    
+
     # map dictionary of docID to score
     doc_vectors = defaultdict(lambda: defaultdict(float))
     query_vector = defaultdict(float)
@@ -135,7 +135,7 @@ def compute_cosine_similarity(doc_vectors, query_vector, query_length, max_score
         for weight in term_weights.values():
             doc_length += weight ** 2
         doc_length = math.sqrt(doc_length)
-            
+
         # Calculate the dot product of the query and document vectors
         cosine_similarity = 0.0
         for word, weight in term_weights.items():
@@ -202,7 +202,7 @@ def process_query(query):
 
     if query_length == 0:
         return ["Query too common or not indexed."]
-        
+
     # Calculate the Euclidean norm (length) of the query vector
     # Euclidean norm = the square root of the sum of the squares of the weights
     query_length = math.sqrt(query_length)
@@ -236,7 +236,6 @@ if __name__ == "__main__":
 
     initialize(
         docinfo_filename=DOCINFO_NAME,
-        doclinks_filename=DOCLINKS_NAME,
         mergeinfo_filename=MERGEINFO_NAME,
         buckets_dir=BUCKETS_DIR
     )
