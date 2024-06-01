@@ -26,11 +26,14 @@ argument "--keep-partial" or "-p" before the path to pages argument.
 
 Computing PageRank and HITS Scores
 ----------------------------------
-Once the index is built, compute the PageRank and HITS scores to evaluate the relevance of each document. Run:
+Post-indexing, you have the option to compute the PageRank and HITS scores to assess 
+the relevance of each document. Execute:
 ``python compute.py``
 
-This script will update each document's `pr_quality`, `hub_quality`, and `auth_quality` attributes, 
-based on their link structure and content.
+This script updates each document's pr_quality, hub_quality, and auth_quality based 
+on their link structures and content relevance. If you choose not to run compute.py, 
+the system will rank search results based on textual relevancy or cosine 
+similarity by default.
 
 Running the Search Engine
 -------------------------
