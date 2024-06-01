@@ -115,7 +115,7 @@ def initialize_doclinks(doclinks_filename):
     global _DOCLINKS_INDEX
 
     # read doclinks
-    with open(doclinks_filename) as doclinksfh:
+    with open(doclinks_filename, 'rb') as doclinksfh:
         doclinksfh.seek(2, 0)
         doclinksend = doclinksfh.tell()
         doclinksfh.seek(0, 0)
