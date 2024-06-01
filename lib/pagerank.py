@@ -25,6 +25,7 @@ def page_rank(docs, damping=0.85, max_iter=100, tol=1e-6):
     # Create a dictionary of docids and the set of docs that link to each
     link_structure = {doc.docid: set() for doc in docs}
     for doc in docs:
+        print("Docid: ", doc.docid)
         linked_docids = get_linked_docids(doc.docid)  # Fetch linked doc IDs
         for linked_docid in linked_docids:
             if linked_docid in link_structure:

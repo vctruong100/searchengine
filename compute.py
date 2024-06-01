@@ -5,7 +5,7 @@
 import sys
 from lib.pagerank import page_rank
 from lib.hits import hits_algorithm
-from lib.reader import initialize, get_num_documents, get_document
+from lib.reader import initialize, get_num_documents, get_document, initialize_doclinks
 from lib.indexfiles import *
 
 USAGE_MSG = "usage: python compute.py"
@@ -19,6 +19,8 @@ def compute_scores():
         buckets_dir=BUCKETS_DIR
     )
 
+    initialize_doclinks(DOCLINKS_NAME)
+    
     # Gather all documents
     documents = [get_document(doc_id) for doc_id in range(1, get_num_documents() + 1)]
 
