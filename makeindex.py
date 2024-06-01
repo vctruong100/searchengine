@@ -36,6 +36,15 @@ def setup_dir():
         os.mkdir(BUCKETS_DIR)
 
 
+def clean_index_metainfo():
+    """Cleans metainfo from the index
+    """
+    if os.path.isfile(DOCINFO_NAME):
+        os.remove(DOCINFO_NAME)
+    if os.path.isfile(DOCLINKS_NAME):
+        os.remove(DOCLINKS_NAME)
+
+
 def make_partial(pagedir, partfh, partdoc):
     """Uses JSON files from within `pagedir` and writes the
     partial index to `partfh` starting from doc ID `partdoc` + 1.
@@ -45,8 +54,8 @@ def make_partial(pagedir, partfh, partdoc):
     partfh.seek(0, 2) # start from end
 
     docid = 0
-    doclimit = 100 # cutoff point for partial index writing
     docfh = open(DOCINFO_NAME, 'ab')
+    doclinksfh = open(DOCLINKS_NAME, 'ab')
 
     stemmer = PorterStemmer()
     inverted_index = defaultdict(list)
@@ -57,11 +66,30 @@ def make_partial(pagedir, partfh, partdoc):
     exact_hashes = set()
     similar_hashes = set()
 
-    start_time = time.time()
+    # number of documents eliminated
+    # by duplicate detection (exact / similar / duplicate URL)
+    # or empty content
+    #
+    # note: pruned docs resets if makeindex is interrupted
+    pruned_docs = 0
+
+    # periodic flushing of the partial index to disk
+    # these variables keep track of this
+    partial_iter = 0
+    partial_flush_period = 100
 
     # recursively walk the pages directory
     for root, _, files in os.walk(dir):
         for file in files:
+            # Periodically writes partial index to disk
+            # if and only if docs is non-empty
+            # Note: This does not advance iterations if a flush is due
+            if partial_iter % partial_flush_period == 0 and docs:
+                write_partial(inverted_index, docs, partfh, docfh, doclinksfh)
+                print(f"partial flush @ docID: {docid} ; pruned={pruned_docs}", flush=True)
+            partial_iter += 1
+
+            # consider JSON files only
             if file.endswith(".json"):
                 # Note: Whenever a document is skipped (as duplicate or empty content):
                 # docid still counts towards that document,
@@ -71,7 +99,6 @@ def make_partial(pagedir, partfh, partdoc):
                     continue # already written; skip
 
                 ### Read JSON file ###
-                print(f"partial flush @ doc ID: {docid}", flush=True)
 
                 path = os.path.join(root, file)
                 with open(path, 'r', encoding='utf-8') as pagefh:
@@ -80,6 +107,7 @@ def make_partial(pagedir, partfh, partdoc):
                     url = urldefrag(jsond.get('url', ''))
 
                 if not content:
+                    pruned_docs += 1
                     continue # empty content; skip
 
                 # url duplicates after defragging?
@@ -145,13 +173,6 @@ def make_partial(pagedir, partfh, partdoc):
                 # free up memory from soup
                 soup.decompose()
 
-                # manipulate tokens
-                extend_tokens_from_ngrams(tokens, ngrams_col)
-                stem_tokens(tokens)
-
-                token_counts = word_count(tokens)
-                total_tokens = len(token_counts.items())
-
 
                 ### Detect duplicate pages (SIMILAR) ###
                 ###
@@ -162,18 +183,28 @@ def make_partial(pagedir, partfh, partdoc):
                 # if content is close to one of the hashes,
                 # then skip the document
                 is_sim = False
-                content_similar_hash = similar_hash(token_counts)
+                content_similar_hash = similar_hash(word_count(tokens)) # this does not include n-grams if tokenize n=3
                 for hash in similar_hashes:
                     if is_similar(content_similar_hash, hash):
                         is_sim = True
                         break
                 if is_sim:
+                    pruned_docs += 1
                     continue # similar to one of the indexed pages/docs
                 similar_hashes.add(content_similar_hash) # add similar hash if no similars
 
 
                 ### Populate postings and documents
                 ### if and only if the page is not a duplicate (exact, similar)
+
+
+                # manipulate tokens
+                extend_tokens_from_ngrams(tokens, ngrams_col)
+                stem_tokens(tokens)
+
+                token_counts = word_count(tokens)
+                total_tokens = len(token_counts.items())
+
 
                 # Iterate over each token and its count and add a Posting to the inverted index
                 for token, count in token_counts.items():
@@ -194,14 +225,11 @@ def make_partial(pagedir, partfh, partdoc):
                     links=doclinks,
                 ))
 
-            # Periodically write the partial index to disk
-            if docid % doclimit == 0: # write for every 100 documents
-                write_partial(inverted_index, docs, partfh, docfh)
 
     # Final write for any remaining documents
     if inverted_index:
-        write_partial(inverted_index, docs, partfh, docfh)
-        print(f"final flush @ docID: {docid}", flush=True)
+        write_partial(inverted_index, docs, partfh, docfh, doclinksfh)
+        print(f"final flush @ docID: {docid} ; pruned={pruned_docs}", flush=True)
     mark_partial(partfh)
 
     end_time = time.time()  # Capture the end time of the indexing process
@@ -248,16 +276,14 @@ def main(dir, keep_partial):
     if not os.path.isfile(PART_NAME):
         partfh = open(PART_NAME, "w+b")
         partok = False
-        if os.path.isfile(DOCINFO_NAME):
-            os.remove(DOCINFO_NAME)
+        clean_index_metainfo() # clean up metainfo
         print("Missing partial index file. Indexing the pages.", flush=True)
     else:
         partfh = open(PART_NAME, "r+b")
         chk_p_status, partheader = check_partial(partfh)
         partok = (chk_p_status == CHK_P_OK)
         if chk_p_status == CHK_P_VER_MISMATCH:
-            if os.path.isfile(DOCINFO_NAME):
-                os.remove(DOCINFO_NAME)
+            clean_index_metainfo() # clean up metainfo
             print("Partial index is outdated. Indexing the pages from scratch.", flush=True)
         elif chk_p_status == CHK_P_INCOMPLETE:
             partdoc, _ = partheader

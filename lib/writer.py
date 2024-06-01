@@ -69,7 +69,7 @@ def mark_partial(partfh):
     partfh.seek(cur, 0)
 
 
-def write_partial(index, docs, partfh, docfh):
+def write_partial(index, docs, partfh, docfh, doclinksfh):
     """Appends the partial index to `partfh` and the docinfo to `docfh`.
     Clears the index and docs if and only if the write was successful.
 
@@ -82,6 +82,7 @@ def write_partial(index, docs, partfh, docfh):
     :param docs list[Document]: A list of documents to be added
     :param partfh: The partial container file handler
     :param docfh: The doc file handler
+    :param doclinksfh: The doc links file handler
 
     :return: Whether the function succeeded
     :rtype: bool
@@ -100,15 +101,21 @@ def write_partial(index, docs, partfh, docfh):
     prev_partcnt, _ = u32_rd(partfh)
 
     # buffered write
-    # write to doc buffer and part buffer
+    # write to doc/doclinks buffer and part buffer
     # (partial tokens are sorted lexicographically)
     part_mmap = bytearray()
     doc_mmap = bytearray()
+    doclinks_mmap = bytearray()
+
     docid = None
 
     for doc in docs:
         docid = doc.docid
         doc_mmap.extend(sdocument_repr(doc))
+        doclinks_mmap.extend(u64_repr(docid))
+        doclinks_mmap.extend(u32_repr(len(doc.links)))
+        for link in doc.links:
+            doclinks_mmap.extend(sstr_repr(link))
 
     for token in sorted(index.keys()):
         postings = index[token]
@@ -132,6 +139,9 @@ def write_partial(index, docs, partfh, docfh):
 
         # update docs
         docfh.write(doc_mmap)
+
+        # update doclinks
+        doclinksfh.write(doclinks_mmap)
 
         # clear index and docs
         index.clear()
@@ -288,11 +298,4 @@ def merge_partial(partfh, merge_filename, buckets_dir):
         bucket_seekfh.close()
 
     return True # success
-
-
-def write_doc_auth():
-    """Updates the authority score
-    """
-    pass
-
 
