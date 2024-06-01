@@ -193,9 +193,9 @@ def process_query(query):
     common_docs = set.intersection(*doc_sets)
 
     max_scores = {
-        'page_rank': max((get_document(doc_id).page_rank for doc_id in common_docs), default=0),
-        'hub_score': max((get_document(doc_id).hub_score for doc_id in common you_docs), default=0),
-        'auth_score': max((get_document(doc_id).auth_score for doc_id in common_docs), default=0)
+        'page_rank': max((get_document(doc_id).pr_quality for doc_id in common_docs), default=0),
+        'hub_score': max((get_document(doc_id).hub_quality for doc_id in common_docs), default=0),
+        'auth_score': max((get_document(doc_id).auth_quality for doc_id in common_docs), default=0)
     }
 
     doc_vectors, query_vector, query_length = calculate_document_scores(postings, common_docs, doc_count)

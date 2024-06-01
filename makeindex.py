@@ -50,6 +50,9 @@ def make_partial(pagedir, partfh, partdoc):
     """Uses JSON files from within `pagedir` and writes the
     partial index to `partfh` starting from doc ID `partdoc` + 1.
     """
+
+    start_time = time.time()
+
     if partdoc == 0:
         partfh = new_partial(fh=partfh) # restart partial file
     partfh.seek(0, 2) # start from end
@@ -86,7 +89,6 @@ def make_partial(pagedir, partfh, partdoc):
     partial_iter = 0
     partial_flush_period = 100
 
-    start_time = time.time()
 
     # recursively walk the pages directory
     for root, _, files in os.walk(dir):
