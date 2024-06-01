@@ -11,7 +11,7 @@ import numpy as np
 def calculate_net_relevance_score(doc, text_relevance, max_scores):
     """Calculate the Net Relevance Score for a single document using provided 
     scores and weights.
-    
+
     :param doc Document: The document
     :param text_relevance float: The textual relevance score
     :return: The net relevance score
@@ -48,7 +48,7 @@ def calculate_net_relevance_score(doc, text_relevance, max_scores):
 
     # Calculate NRS without weights or normalization
     # quality = doc.page_rank + doc.hub_score + doc.auth_score + text_relevance
-    
+
     return quality
 
 def stem_query(query):
@@ -83,6 +83,8 @@ def calculate_document_scores(query, postings, common_docs, doc_count):
     :rtype: tuple
     """
 
+    PROMOTION_MUL = 1.2 # promoting multiplier for important text
+
     # map dictionary of docID to score
     doc_vectors = defaultdict(lambda: defaultdict(float))
     query_vector = defaultdict(float)
@@ -109,6 +111,8 @@ def calculate_document_scores(query, postings, common_docs, doc_count):
                 # Calculate logarithmic TF for document
                 doc_tf = 1 + math.log(posting.tf) if posting.tf > 0 else 0
                 doc_weight = doc_tf
+                if posting.important:
+                    doc_weight *= PROMOTION_MUL # promote important doc
                 doc_vectors[posting.docid][word] = doc_weight
     return doc_vectors, query_vector, query_length
 
@@ -132,7 +136,7 @@ def compute_cosine_similarity(doc_vectors, query_vector, query_length, max_score
         for weight in term_weights.values():
             doc_length += weight ** 2
         doc_length = math.sqrt(doc_length)
-            
+
         # Calculate the dot product of the query and document vectors
         cosine_similarity = 0.0
         for word, weight in term_weights.items():
@@ -154,7 +158,7 @@ def process_query(query, num_results):
     :return: The results
     :rtype: list
     """
-    
+
     result = []
     stemmed_words = stem_query(query)
     doc_count = get_num_nonempty_documents()
@@ -166,7 +170,7 @@ def process_query(query, num_results):
 
     # Find the intersection of documents that contain all terms
     common_docs = set.intersection(*doc_sets)
-    
+
     pr_scores = []
     hub_scores = []
     auth_scores = []
@@ -189,7 +193,7 @@ def process_query(query, num_results):
 
     if query_length == 0:
         return ["Query too common or not indexed."]
-        
+
     # Calculate the Euclidean norm (length) of the query vector
     # Euclidean norm = the square root of the sum of the squares of the weights
     query_length = math.sqrt(query_length)
