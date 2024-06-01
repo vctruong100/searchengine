@@ -34,6 +34,16 @@ def initialize(docinfo_filename, mergeinfo_filename, buckets_dir):
     if _initialized:
         return
 
+    global _INDEX_BUCKETS
+    global _INDEX_SEEK
+    global _DOCINFO
+    global _DOCINFO_LINKS_INDEX
+    global _DOCLINKS
+    global _MERGEINFO_DOCID
+    global _MERGEINFO_TOTAL_TOKENS
+    global _NONEMPTY_DOC_CNT
+    global _EMPTY_DOC_CNT
+
     # parse docinfo - store docinfo file in memory
     with open(docinfo_filename, 'rb') as docfh:
         docfh.seek(0, 2)
@@ -101,6 +111,9 @@ def initialize_doclinks(doclinks_filename):
     if _initialized_docs:
         return
 
+    global _DOCLINKS
+    global _DOCLINKS_INDEX
+
     # read doclinks
     with open(doclinks_filename) as doclinksfh:
         doclinksfh.seek(2, 0)
@@ -129,24 +142,28 @@ def get_total_tokens():
     """Returns the total number of unique tokens
     across the entire set of documents.
     """
+    global _MERGEINFO_TOTAL_TOKENS
     return _MERGEINFO_TOTAL_TOKENS
 
 
 def get_num_documents():
     """Returns the total number of documents indexed.
     """
+    global _MERGEINFO_DOCID
     return _MERGEINFO_DOCID
 
 
 def get_num_empty_documents():
     """Returns the total number of empty documents indexed.
     """
+    global _EMPTY_DOC_CNT
     return _EMPTY_DOC_CNT
 
 
 def get_num_nonempty_documents():
     """Returns the total number of non-empty documents indexed.
     """
+    global _NONEMPTY_DOC_CNT
     return _NONEMPTY_DOC_CNT
 
 
@@ -154,6 +171,7 @@ def get_document(docid):
     """Returns the Document object associated with the document ID.
     See 'lib/document.py' for the Document interface.
     """
+    global _DOCINFO
     return _DOCINFO[docid - 1]
 
 
@@ -162,6 +180,7 @@ def get_linked_docids(docid):
     particular document. Note that reachable means its URL exists
     in the document content.
     """
+    global _DOCLINKS
     return _DOCLINKS[docid - 1]
 
 
@@ -181,6 +200,8 @@ def get_postings(token):
     seekoffset = seekbucket.get(token, None)
     if not seekoffset:
         return []
+
+    global _INDEX_BUCKETS
 
     bucketfh = _INDEX_BUCKETS[bid]
     bucketfh.seek(seekoffset, 0)
