@@ -12,6 +12,7 @@ import itertools
 
 from bs4 import BeautifulSoup
 from collections import defaultdict # simplify and speed up Posting insertion
+from collections import deque
 from json import load
 from nltk.stem import PorterStemmer
 from hashlib import sha256
@@ -62,9 +63,16 @@ def make_partial(pagedir, partfh, partdoc):
     docs = []
 
     # USED FOR DETECTING DUPLICATE PAGES
+    # NOTE: this resets if makeindex is interrupted
     urls_found = set()
     exact_hashes = set()
-    similar_hashes = set()
+    similar_hashes = deque() # use a deque to pop old similar hashes
+
+    # consider only the most recent similar hashes
+    # the idea is that as similar hashes accumulate, they start to
+    # slow down the indexing processing due to the need to compare
+    # against every hash
+    max_similar_hashes = 200
 
     # number of documents eliminated
     # by duplicate detection (exact / similar / duplicate URL)
@@ -161,7 +169,7 @@ def make_partial(pagedir, partfh, partdoc):
                 # extract links
                 #
                 # store them as a list of adjacent edges
-                # these are stored as sha-256 hashes (32 bytes)
+                # these are storred as defragged URLs
                 #
                 # these are used to determine the static quality score (hits or pagerank)
                 doclinks = set()
@@ -191,8 +199,11 @@ def make_partial(pagedir, partfh, partdoc):
                 if is_sim:
                     pruned_docs += 1
                     continue # similar to one of the indexed pages/docs
-                similar_hashes.add(content_similar_hash) # add similar hash if no similars
 
+                # add similar hash if no similars iff there are few similar hashes
+                similar_hashes.append(content_similar_hash)
+                if len(similar_hashes) > max_similar_hashes:
+                    similar_hashes.popleft() # remove oldest sim hash if too many
 
                 ### Populate postings and documents
                 ### if and only if the page is not a duplicate (exact, similar)
