@@ -3,6 +3,9 @@ This spec describes the various file formats used in the inverted index. While
 the formats are implemented in `lib/reader.py` and `lib/writer.py`, the spec 
 exists to document the file format in an accessible form.
 
+It's worth noting that the structs defined here do not necessarily conform to a 
+uniform size unlike in C; they are packed tightly and may have variable size.
+
 ## Standard structs
 These are standard structs that are shared throughout the file formats:
 - `struct str` shows how strings are stored in the files
@@ -26,7 +29,9 @@ typedef struct posting {
 typedef struct document {
     u64 docid;
     u32 total_tokens;
-    f32 quality;        // static quality score g(d)
+    f32 pr_quality;         // static quality score g(d) for pagerank
+    f32 hub_quality;        // static qualiy score g(d) for HITS (hub score)
+    f32 auth_quality;       // static quality score g(d) for HITS (authority score)
     struct str url;
 } Document;
 
@@ -75,6 +80,24 @@ struct definitions that define the entire format:
 struct docinfo {
     Document *documents;
 }; /* this is the actual format */
+
+```
+
+## Doclinks
+This is a file that consists of docids mapped to a list of URL strings. Below 
+are the struct definitions that define the entire format.
+
+```c
+struct dlink_pair;
+
+struct doclinks {
+    dlink_pair *pairs;    
+}; /* this is the actual format */
+
+struct dlink_pair {
+    u32 docid;
+    struct str *urls;
+};
 
 ```
 
