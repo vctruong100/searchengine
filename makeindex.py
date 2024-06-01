@@ -86,6 +86,8 @@ def make_partial(pagedir, partfh, partdoc):
     partial_iter = 0
     partial_flush_period = 100
 
+    start_time = time.time()
+
     # recursively walk the pages directory
     for root, _, files in os.walk(dir):
         for file in files:
