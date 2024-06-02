@@ -30,7 +30,7 @@ def summarize_text(text):
     """Generates a summary for the provided text using the BART model."""
     max_input_length = 512
     truncated_text = text[:max_input_length]
-    summary = summarizer(truncated_text, max_length=60, min_length=20, length_penalty=2.0, num_beams=1, early_stopping=True)[0]['summary_text']
+    summary = summarizer(truncated_text, max_length=60, min_length=20)[0]['summary_text']
     return summary
 
 def write_partial_summary(index, summaries, partfh):
