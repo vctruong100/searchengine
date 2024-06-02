@@ -4,6 +4,7 @@
 
 import os
 import glob
+import functools
 from collections import defaultdict
 from lib.structs import *
 from lib.posting import *
@@ -11,6 +12,7 @@ from lib.document import *
 
 _INDEX_BUCKETS = {}
 _INDEX_SEEK = defaultdict(dict)
+_INDEX_CACHE = {}
 
 _DOCINFO = []
 _DOCINFO_LINKS_INDEX = {}
@@ -187,6 +189,7 @@ def get_linked_docids(docid):
     return _DOCLINKS[docid - 1]
 
 
+@functools.lru_cache(maxsize=256)
 def get_postings(token):
     """Returns a list of postings associated with the token.
     Each posting list is sorted by ascending docID.
@@ -215,5 +218,6 @@ def get_postings(token):
     for _ in range(num_postings):
         posting, _ = sposting_rd(bucketfh)
         postings.append(posting)
+
     return postings
 

@@ -164,29 +164,60 @@ def process_query(query):
 
     tt2 = time.time()
 
+    # number of pruned tokens (non-unique)
+    # number of total valid tokens (non-unique) in query
+    # number of unique valid tokens in query
+    prune_count = 0
+    valid_count = 0
+    num_valid_tokens = 0
+
+    # validate tokens and ignore any
+    # tokens that do not yield any docs
+    # stopwords are removed temporarily for extra filtering
+    #
+    # if a token is ignored, the prune count increases if and only if
+    # the token is alphanumeric
     stopwords = set()
     stopwords_heap = []
-    for token in frequencies.keys():
+    for token in sorted(frequencies.keys()):
+        postings = get_postings(token)
+        doc_freq = len(postings)
+        if doc_freq == 0:
+            if token.isalnum(): # alphanumeric counts towards prune
+                prune_count += frequencies[token]
+            del frequencies[token]
+            continue
+        num_valid_tokens += 1
+        valid_count += frequencies[token]
         if is_stopword(token):
-            doc_freq = len(get_postings(token))
             token_freq = frequencies[token]
+            if not token_freq:
+                continue
             heapq.heappush(
                 stopwords_heap,
                 (doc_freq, token_freq, token)
             )
             stopwords.add(token)
+            del frequencies[token]
 
-    for word in stopwords:
-        del frequencies[word]
+    # if the number of pruned tokens is substantial
+    # (i.e. no docs contain these tokens), the query was
+    # probably not good in the first place, so return an empty result
+    if prune_count > valid_count * 2:
+        return []
 
-    # if stopwords are insignificant, prune the stopwords
-    # otherwise, consider the first k+1 stopwords that are least
-    # frequently represented in docs where k = log2(number of stopwords)
-    if not (len(stopwords) < len(tokens) * 0.3):
+    # if unique stopwords are insignificant, prune the stopwords
+    # otherwise, consider the first k+1 unique stopwords that are least
+    # frequently represented in docs (but are represented)
+    # where k = log2(number of stopwords)
+    if len(stopwords) > 0 and not (len(stopwords) < num_valid_tokens * 0.3):
         k = 1 + int(math.log2(len(stopwords)))
         for _ in range(k):
             _, freq, token = heapq.heappop(stopwords_heap)
             frequencies[token] = freq
+
+    if not frequencies:
+        return [] # empty query after pruning
 
     et2 = time.time()
 
