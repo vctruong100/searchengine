@@ -341,3 +341,15 @@ def update_doc_hits_quality(docinfo_filename, scores):
 
         _, _ = sstr_rd(docfh)
 
+def write_summary(docid, summary, summary_fh):
+    """Writes the summary directly to the summary file in a binary format.
+
+    :param docid int: The document identifier
+    :param summary str: The summary of the document
+    :param summary_fh: The summary file handler
+    """
+    docid_bytes = u64_repr(docid)
+    summary_bytes = sstr_repr(summary)  
+
+    summary_fh.write(docid_bytes)
+    summary_fh.write(summary_bytes)
