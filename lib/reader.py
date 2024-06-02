@@ -27,6 +27,7 @@ _EMPTY_DOC_CNT = 0
 _initialized = False
 _initialized_docs = False
 
+_SUMMARY_INDEX = {}
 
 def initialize(docinfo_filename, mergeinfo_filename, buckets_dir):
     """Initializes the reader by opening index files
@@ -143,6 +144,24 @@ def initialize_doclinks(doclinks_filename):
     _initialized_docs = True # initialized successfully
 
 
+def initialize_summary(filename):
+    if not os.path.exists(filename):
+        print("Summary file does not exist.")
+        return
+
+    try:
+        with open(filename, "rb") as summary_fh:
+            while True:
+                pos = summary_fh.tell()  # Get the current position before reading
+                doc_id_bytes, _ = u64_rd(summary_fh)  # Read the docid
+                if doc_id_bytes is None:
+                    break
+                current_docid = doc_id_bytes
+                _, summary_length = sstr_rd(summary_fh)  # Read the summary to move the file pointer
+                _SUMMARY_INDEX[current_docid] = pos  # Map docid to its position
+    except Exception as e:
+        print(f"Failed to initialize summary index: {str(e)}")
+
 def get_total_tokens():
     """Returns the total number of unique tokens
     across the entire set of documents.
@@ -221,3 +240,19 @@ def get_postings(token):
 
     return postings
 
+def get_summary(docid):
+    """Retrieves the summary for the given document identifier.
+
+    :param docid int: The document identifier
+    :return str: The summary of the document
+    """
+    if docid not in _SUMMARY_INDEX:
+        return None
+    try:
+        with open(SUMMARY_NAME, "rb") as summary_fh:
+            summary_fh.seek(_SUMMARY_INDEX[docid])
+            summary_fh.read(8)  # Skip the docid bytes
+            summary, _ = sstr_rd(summary_fh)  # Read the summary
+            return summary
+    except Exception as e:
+        return f"Error reading summary: {str(e)}"
