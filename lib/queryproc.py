@@ -11,6 +11,7 @@ from lib.tokenize import *
 from lib.stopwords import is_stopword
 from lib.word_count import *
 from lib.params import *
+from lib.structs import *
 
 def postings_set(tokenset):
     """Returns postings set indexed both by
@@ -272,7 +273,7 @@ def format_results_tty(result, k):
     return results
 
 
-def format_results_web(result, k):
+def format_results_web(result, k, SUMMARY_NAME):
     """Returns the top K results and formats
     the results for the web interface.
     """
@@ -283,8 +284,9 @@ def format_results_web(result, k):
             break # score is too low
         document = get_document(docid)
         url = document.url if document.url else "URL not found"
+        summary = get_summary(docid)
+        print(summary)
         results.append(
-            f'{rank}. <a href="{url}" target="_blank">{url}</a> (Score: {score:.2f})'
+            f'{rank}. <a href="{url}" target="_blank">{url}</a> (Score: {score:.2f})<br>Summary: {summary}'
         )
     return results
-

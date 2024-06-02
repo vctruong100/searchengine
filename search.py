@@ -10,7 +10,7 @@ import os
 import sys
 from flask import Flask, request, render_template
 from lib.queryproc import process_query, format_results_web
-from lib.reader import initialize
+from lib.reader import initialize, initialize_summary
 from lib.indexfiles import *
 
 app = Flask(__name__)
@@ -40,7 +40,7 @@ def search():
         total_results = len(result)
 
         end_time = time.time_ns()
-        results = format_results_web(result, num_results if not all_results else total_results)
+        results = format_results_web(result, num_results if not all_results else total_results, SUMMARY_NAME)
         query_time = (end_time - start_time) / 1_000_000
     return render_template('search.html', results=results, query_time=query_time, query=query, total_results=total_results)
 
@@ -58,6 +58,9 @@ if __name__ == "__main__":
             mergeinfo_filename=MERGEINFO_NAME,
             buckets_dir=BUCKETS_DIR
         )
+
+        initialize_summary(SUMMARY_NAME)  
+
     except Exception as e:
         print(f"Failed to initialize reader: {e}")
         sys.exit(1)

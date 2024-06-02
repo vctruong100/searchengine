@@ -9,12 +9,12 @@ from bs4 import BeautifulSoup
 from queue import PriorityQueue
 from lib.structs import *
 from lib.indexfiles import *
+from lib.writer import write_summary
 
 USAGE_MSG = "usage: python summarizer.py path/to/pages"
 
 # Initialize the summarization pipeline
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-
 
 def setup_dir():
     """Sets up the necessary directories for storing the index.
@@ -28,19 +28,6 @@ def summarize_text(text):
     truncated_text = text[:max_input_length]
     summary = summarizer(truncated_text, max_length=60, min_length=20)[0]['summary_text']
     return summary
-
-def write_summary(docid, summary, summary_fh):
-    """Writes the summary directly to the summary file in a binary format.
-
-    :param docid int: The document identifier
-    :param summary str: The summary of the document
-    :param summary_fh: The summary file handler
-    """
-    docid_bytes = u64_repr(docid)
-    summary_bytes = sstr_repr(summary)  
-
-    summary_fh.write(docid_bytes)
-    summary_fh.write(summary_bytes)
 
 def extract_text_from_html(html_content):
     """Extracts text from HTML content."""
