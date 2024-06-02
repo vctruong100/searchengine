@@ -117,7 +117,7 @@ def initialize_doclinks(doclinks_filename):
 
     # read doclinks
     with open(doclinks_filename, 'rb') as doclinksfh:
-        doclinksfh.seek(2, 0)
+        doclinksfh.seek(0, 2)
         doclinksend = doclinksfh.tell()
         doclinksfh.seek(0, 0)
         while doclinksfh.tell() != doclinksend:
