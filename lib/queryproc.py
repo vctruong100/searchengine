@@ -285,7 +285,8 @@ def format_results_web(result, k, SUMMARY_NAME):
         document = get_document(docid)
         url = document.url if document.url else "URL not found"
         summary = get_summary(docid)
-        print(summary)
+        if not summary:
+            summary = "Summary not found"
         results.append(
             f'{rank}. <a href="{url}" target="_blank">{url}</a> (Score: {score:.2f})<br>Summary: {summary}'
         )
