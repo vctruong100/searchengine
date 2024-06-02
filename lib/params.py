@@ -7,7 +7,7 @@ def _assert_sum_is_one(*args, assertmsg=''):
 
 # score multiplier for important text
 importance = [
-    1.0,     # untagged (not important)
+    0.8,    # untagged (not important)
     3.0,    # title
     2.0,    # h1
     1.6,    # h2
@@ -22,7 +22,7 @@ importance = [
 # scoring parameters
 # net_relevance is for tfidf + cosine similarities
 # quality is the static quality score
-net_relevance_factor = 1
+net_relevance_factor = 0.57
 quality_factor = 1 - net_relevance_factor
 
 _assert_sum_is_one(net_relevance_factor, quality_factor,
@@ -32,7 +32,7 @@ _assert_sum_is_one(net_relevance_factor, quality_factor,
 # relevance parameters
 # tfidf is term frequency * inverse document frequenc
 # cosine is cosine similarity
-tfidf_factor = 0.8
+tfidf_factor = 0.73
 cosine_factor = 1 - tfidf_factor
 
 _assert_sum_is_one(tfidf_factor, cosine_factor,
@@ -41,9 +41,9 @@ _assert_sum_is_one(tfidf_factor, cosine_factor,
 
 # quality factor parameters
 # pagerank, hits (hub/auth)
-pr_factor = 0.6
-hub_factor = 0.2
-auth_factor = 0.2
+pr_factor = 0.55
+hub_factor = 0.3
+auth_factor = 0.15
 
 _assert_sum_is_one(pr_factor, hub_factor, auth_factor,
     assertmsg="quality factors must sum to 1")

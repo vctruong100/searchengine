@@ -108,13 +108,14 @@ def compute_scores(docid_postings, token_postings, query_vec):
 
     # compute net relevance
     # note: if query and document is too dissimilar, we exclude the document relevancy
+    # since the terms are most likely not that useful to the user
     for docid in docid_postings.keys():
         normalized_tfidf = (doc_tfidf_sums[docid] / doc_tfidf_sums_norm
             if doc_tfidf_sums_norm else 0.0)
         normalized_cosine = (doc_cosine[docid] / doc_cosine_norm
             if doc_cosine_norm else 0.0)
         net_relevance[docid] = (tfidf_factor * normalized_tfidf
-            + cosine_factor * normalized_cosine) if doc_cosine[docid] > 0.5 else 0.0
+            + cosine_factor * normalized_cosine) if doc_cosine[docid] > 0.4 else 0.0
         print(docid, doc_cosine[docid], normalized_cosine)
 
 
