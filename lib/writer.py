@@ -307,17 +307,21 @@ def update_doc_pr_quality(docinfo_filename, scores):
     :param scores dict[int, float]: Mapping of docid to float score
     """
     with open(docinfo_filename, 'r+b') as docfh:
-        docid, _ = u64_rd(docfh)
-        _, _ = u32_rd(docfh)
+        docfh.seek(0, 2)
+        docfhend = docfh.tell()
+        docfh.seek(0, 0)
+        while docfh.tell() != docfhend:
+            docid, _ = u64_rd(docfh)
+            _, _ = u32_rd(docfh)
 
-        # pr_quality
-        score = scores.get(docid, None)
-        if score != None:
-            docfh.write(f32_repr(score))
+            # pr_quality
+            score = scores.get(docid, None)
+            if score != None:
+                docfh.write(f32_repr(score))
 
-        _, _ = f32_rd(docfh)
-        _, _ = f32_rd(docfh)
-        _, _ = sstr_rd(docfh)
+            _, _ = f32_rd(docfh)
+            _, _ = f32_rd(docfh)
+            _, _ = sstr_rd(docfh)
 
 
 def update_doc_hits_quality(docinfo_filename, scores):
@@ -329,17 +333,21 @@ def update_doc_hits_quality(docinfo_filename, scores):
     :param scores dict[int, tuple]: Mapping of docid to 2-tuple float scores
     """
     with open(docinfo_filename, 'r+b') as docfh:
-        docid, _ = u64_rd(docfh)
-        _, _ = u32_rd(docfh)
-        _, _ = f32_rd(docfh)
+        docfh.seek(0, 2)
+        docfhend = docfh.tell()
+        docfh.seek(0, 0)
+        while docfh.tell() != docfhend:
+            docid, _ = u64_rd(docfh)
+            _, _ = u32_rd(docfh)
+            _, _ = f32_rd(docfh)
 
-        # hub/auth_quality
-        score = scores.get(docid, None)
-        if score != None:
-            docfh.write(f32_repr(score[0]))
-            docfh.write(f32_repr(score[1]))
+            # hub/auth_quality
+            score = scores.get(docid, None)
+            if score != None:
+                docfh.write(f32_repr(score[0]))
+                docfh.write(f32_repr(score[1]))
 
-        _, _ = sstr_rd(docfh)
+            _, _ = sstr_rd(docfh)
 
 def write_summary(docid, summary, summary_fh):
     """Writes the summary directly to the summary file in a binary format.
