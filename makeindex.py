@@ -166,12 +166,12 @@ def make_partial(pagedir, partfh, partdoc):
                     ('h4',5), ('b',6), ('strong',7), ('mark',8),
                 ]
                 for tag, _ in important_tags:
-                    tag_soup = soup.find_all(tag)
-                    for e in tag_soup:
-                        e_text = e.get_text()
-                        important_tokens[tag].update(tokenize(e_text, n=1)[0])
-                        e_text = "" # possibly free up memory
-                    tag_soup.decompose() # free up memory from soup
+                    taglist = soup.find_all(tag)
+                    for tag_soup in taglist:
+                        tag_text = tag_soup.get_text()
+                        important_tokens[tag].update(tokenize(tag_text, n=1)[0])
+                        tag_text = "" # possibly free up memory
+                        tag_soup.decompose() # free up memory from soup
 
                 # extract links
                 #
