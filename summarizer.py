@@ -28,10 +28,20 @@ def setup_dir():
 
 def summarize_text(text):
     """Generates a summary for the provided text using the BART model."""
-    inputs = tokenizer(text, return_tensors='pt', max_length=1024, truncation=True)
-    summary_ids = model.generate(inputs['input_ids'], max_length=80, min_length=20, length_penalty=2.0, num_beams=4, early_stopping=True)
+    
+    # return_tensor='pt' returns PyTorch tensors
+    # max_length is set to 1024 to avoid truncation of long documents
+    # truncation=True truncates the input to the model's max length
+    inputs = tokenizer(text, return_tensors='pt', max_length=512, truncation=True)
+
+    # max_length is the maximum length of the generated summary
+    # min_length is the minimum length of the generated summary
+    # length_penalty adjusts the penalty for length in the beam search
+    # num_beams is the number of beams for beam search
+    # beam search generates multiple sequences and selects the best one
+    # early_stopping stops the beam search when all beams have reached the max length
+    summary_ids = model.generate(inputs['input_ids'], max_length=60, min_length=20, length_penalty=2.0, num_beams=1, early_stopping=True)
     summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
-    print(f"Summary: {summary}")
     return summary
 
 def write_partial_summary(index, summaries, partfh):
@@ -160,7 +170,7 @@ def process_directory(json_dir):
                             text = extract_text_from_html(content)
                             summary = summarize_text(text)
                             summary_metadata[docid] = summary
-
+                            print(f"Document {docid}: {summary}")
                             if partial_iter % partial_flush_period == 0 and summary_metadata:
                                 write_partial_summary(summary_metadata, summary_metadata, partfh)
                                 summary_metadata.clear()
