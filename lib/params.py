@@ -7,7 +7,7 @@ def _assert_sum_is_one(*args, assertmsg=''):
 
 # score multiplier for important text
 importance = [
-    1.0     # untagged (not important)
+    1.0,     # untagged (not important)
     3.0,    # title
     2.0,    # h1
     1.6,    # h2
