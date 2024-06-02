@@ -23,20 +23,26 @@ def search():
     results = []
     query_time = 0
     query = ""
+    total_results = 0
     if request.method == "POST":
         query = request.form.get("query")
         num_results = request.form.get("num_results")
-        if not num_results:
-            num_results = 5  # default value if not provided
+
+        all_results = False
+
+        if num_results == "all":
+            all_results = True
         else:
             num_results = int(num_results)
 
         start_time = time.time_ns()
         result = process_query(query)
+        total_results = len(result)
+
         end_time = time.time_ns()
-        results = format_results_web(result, num_results)
+        results = format_results_web(result, num_results if not all_results else total_results)
         query_time = (end_time - start_time) / 1_000_000
-    return render_template('search.html', results=results, query_time=query_time, query=query)
+    return render_template('search.html', results=results, query_time=query_time, query=query, total_results=total_results)
 
 def open_browser():
     webbrowser.open_new("http://127.0.0.1:5000/")

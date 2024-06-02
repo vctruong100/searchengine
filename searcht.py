@@ -30,6 +30,7 @@ def run_server():
         result = queryproc.process_query(query)
         end_time = time.time_ns()  # End timing
 
+        print(f"Number of results: {len(result)}")
         for result in queryproc.format_results_tty(result, 5):
             print(result)
 
