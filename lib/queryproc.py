@@ -35,8 +35,9 @@ def postings_set(tokenset):
         if docid not in query_docids:
             del docid_postings[docid]
 
-    for vec in docid_postings.values():
-        token_postings[token].append(vec[token])
+    for token in tokenset:
+        for vec in docid_postings.values():
+            token_postings[token].append(vec[token])
 
     return docid_postings, token_postings
 
@@ -83,11 +84,21 @@ def compute_scores(docid_postings, token_postings, query_vec):
         tf /= query_total_tokens
         query_tfidf[token] = tf * idfs[token]
 
+    query_tfidf_norm = np.linalg.norm(
+        np.fromiter(query_tfidf.values(), dtype=float)
+    )
+
     for docid, doc_tfidf in doc_tfidfs.items():
         for token, tfidf in query_tfidf.items():
             doc_cosine[docid] += (doc_tfidf[token] * tfidf)
 
-    # compute norms of tfidf sum and cosine similarity
+        doc_tfidf_norm = np.linalg.norm(
+            np.fromiter(doc_tfidfs[docid].values(), dtype=float)
+        )
+
+        doc_cosine[docid] /= doc_tfidf_norm * query_tfidf_norm
+
+    # compute norm of tfidf sums and cosine similarity
     doc_tfidf_sums_norm = np.linalg.norm(
         np.fromiter(doc_tfidf_sums.values(), dtype=float)
     )
@@ -96,14 +107,15 @@ def compute_scores(docid_postings, token_postings, query_vec):
     )
 
     # compute net relevance
-    # note: if query and document is too dissimilar, we exclude the document
+    # note: if query and document is too dissimilar, we exclude the document relevancy
     for docid in docid_postings.keys():
         normalized_tfidf = (doc_tfidf_sums[docid] / doc_tfidf_sums_norm
             if doc_tfidf_sums_norm else 0.0)
         normalized_cosine = (doc_cosine[docid] / doc_cosine_norm
             if doc_cosine_norm else 0.0)
         net_relevance[docid] = (tfidf_factor * normalized_tfidf
-            + cosine_factor * normalized_cosine)
+            + cosine_factor * normalized_cosine) if doc_cosine[docid] > 0.5 else 0.0
+        print(docid, doc_cosine[docid], normalized_cosine)
 
 
     ### compute quality ###
