@@ -37,9 +37,13 @@ similarity by default.
 
 Running the Search Engine
 -------------------------
-To start the search engine and begin processing local user queries, use:
+To start the search engine with Web GUI and begin processing local user queries, use:
 ``python search.py``
+Note: Using the Web GUI will slightly decrease the query speed.
+
+To not use the Web GUI, execute:
+``python searcht.py``
 
 This command launches a local server that allows real-time searching of the indexed documents. 
-The server calculates net relevance scores for each query, using the previously computed PageRank and HITS 
-scores along with textual relevance derived from the query.
+The server calculates net relevance scores for each query, using the previously 
+computed PageRank and HITS scores along with textual relevance derived from the query.

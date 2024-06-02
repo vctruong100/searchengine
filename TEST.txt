@@ -33,7 +33,8 @@ Initial Query Time: 119.0575
 
 Final Performance: The refined system now successfully filters out documents 
 with server errors, ensuring that only relevant and accessible documents rank 
-higher. Users are directed to authoritative sources, improving the overall 
+higher. It provide pages with clear instructions on how to set up vpn, especially for
+Openlab Servers. Users are directed to authoritative sources, improving the overall 
 reliability of search results.
 
 Final Query Time: 97.003 
@@ -50,7 +51,7 @@ ensuring that documents are relevant to optimizing SQL queries. While the
 results are text-dense, they remain pertinent and beneficial for users seeking 
 in-depth information.
 
-Final Query Time: 7.5638 
+Final Query Time: 6.0139 
 
 3. Query: "Deep learning vs. machine handling"
 Initial Performance: The results showed confusion between "deep learning" and 
@@ -60,12 +61,13 @@ which diluted the relevance of the search results.
 
 Initial Query Time: 32.002 
 
-Final Performance: The result refinement has reduced duplicates by handling 
+Final Performance: The result refinement has eliminated duplicates by handling 
 similar URLs leading to the same content. However, the top results, while 
-more focused, still lack high-value information, suggesting the need for a broader data 
+more focused, still lack high-value information targeting "deep learning" and
+"machine handling", suggesting the need for a broader data 
 source to enrich the query responses.
 
-Final Query Time: 19.0911 
+Final Query Time: 30.2116 
 
 4. Query: "Python programming language tutorial"
 Initial Performance: Several similar pages were indexed separately due to 
@@ -74,12 +76,12 @@ causing duplicate results in the search output.
 
 Initial Query Time: 52.0549 
 
-Final Performance:  The result refinement has reduced duplicates by handling similar 
-URLs leading to the same content. However, the top results, while more focused, still 
-lack high-value information, suggesting the need for a broader data source to enrich the 
-query responses.
+Final Performance:  The result refinement has eliminated duplicates by handling similar 
+URLs leading to the same content. Top results does provide information on python programming
+language, but lack "tutorial" concepts, suggesting the need for a broader data source to enrich
+the query responses.
 
-Final Query Time: 68.9977 
+Final Query Time: 56.5478
 
 5. Query: "Big data analytics tools comparison"
 Initial Performance: The search results were cluttered with a high volume of 
@@ -89,8 +91,8 @@ did not effectively differentiate content by relevance to the search query.
 Initial Query Time: 54.0002 
 
 Final Performance: There's a noticeable improvement in filtering unrelated documents 
-like calendars and staff lists. However, the search results still require more high-value 
-content to fully meet user expectations in comparing big data tools.
+like calendars and staff lists. The search results does provide heavy text-based 
+information; though it's hard to tell whether it meets expectations.
 
 Final Query Time: 23.0712 
 
@@ -102,8 +104,8 @@ This indicates a lack of content-specific indexing where common terms lead to mi
 Initial Query Time: 3.0001 
 
 Final Performance: Although the relevance of the results has slightly improved, 
-the system still needs to fine-tune its capability to differentiate between 
-'angular frameworks' and unrelated 'angular' topics like angular resolution.
+but because the query length is a bit broad and lack of data on angular framework,
+the search engine fails to find relevant results.
 
 Final Query Time: 2.0553 
 
@@ -131,7 +133,7 @@ Final Performance: Improvements are seen in the relevance of search results,
 with the top hits now focusing on programming languages specifically used in 
 data science, though the depth of information available remains a challenge.
 
-Final Query Time: 146.9985 
+Final Query Time: 91.9998  
 
 9. Query: "How to implement continuous integration and continuous deployment"
 Initial Performance: While the initial results were accurate, many duplicate pages 
@@ -153,9 +155,8 @@ to ensure they provide value.
 
 Initial Query Time: 74.9945 
 
-Final Performance: Initial pages lack information, but subsequent results 
-dramatically improve, almost perfectly matching the query intent, reflecting 
-a significant enhancement in filtering and relevance.
+Final Performance: The results finally provide news articles and trending pages on
+not just cybersecurity, but technology as a whole.
 
 Final Query Time: 48.0521 
 
@@ -166,10 +167,11 @@ lacked a focus on content currency and accuracy.
 
 Initial Query Time: 96.9984 
 
-Final Performance: The system struggles to provide more than one relevant result, 
-highlighting a specific gap in the available data for blockchain-related queries.
+Final Performance: The system provided one news article but can only be viewed
+from the json pages. It does contain relevant information on developments in
+blockchain technology which indicates the effectiveness of the search engine.
 
-Final Query Time: 68.362 
+Final Query Time: 49.9998
 
 12. Query: "How to troubleshoot performance issues in a distributed system"
 Initial Performance: The top result led to a problematic redirect loop, with some 
@@ -191,9 +193,8 @@ tuned to distinguish between general design and mobile-specific UI design topics
 
 Initial Query Time: 276.1528 
 
-Final Performance: Only one of the results is highly relevant, indicating 
-that while there is an improvement in capturing UI design topics, the focus 
-on mobile-specific issues needs enhancement.
+Final Performance: Many highly relevant results were provided but mainly focuses
+on UI design topics and not mobile-specific applications.
 
 Final Query Time: 218.0684 
 
@@ -204,21 +205,23 @@ content depth or relevance to the nuanced differences between these fields.
 
 Initial Query Time: 76.0472  
 
-Final Performance: The search results still show a lack of depth in addressing 
-the nuanced differences between these fields, suggesting a need for more targeted content indexing.
+Final Performance: The search results provide interesting publication and articles
+on Computer Science and Software Engineer separately. While there are no articles
+containing both terms at the same time, it still provide high-value information.
 
-Final Query Time: 93.0722
+Final Query Time: 83.944 
 
-15. Query: "to be, or not to be"
+15. Query: "to be or not to be"
 Initial Performance: The query pulled a broad range of content, much of which was 
 unrelated to the famous soliloquy, illustrating the system’s difficulty in focusing 
 on specific literary analysis or relevant discussions.
 
 Initial Query Time: 195.636 
 
-Final Performance:  The search engine still struggles to return content specifically 
-related to the famous soliloquy, highlighting a possible deficiency in literary content 
-within the database.
+Final Performance:  The search engine finally contains literary pages. Pages such as
+"https://ics.uci.edu/~kobsa/privacy/greece.htm" and
+"https://ics.uci.edu/~kobsa/privacy/Austrian-english.htm" were given, which shows the
+effect on the search engine improvement.
 
 Final Query Time: 273.041
 
@@ -239,8 +242,9 @@ indicating an issue with indexing quality and relevancy checks.
 
 Initial Query Time: 71.7662 
 
-Final Performance: Results remain mostly irrelevant, with many leading to 
-homepage redirections, indicating ongoing issues with indexing quality and relevancy.
+Final Performance: Results has improved by remain somewhat irrelevant, containing 
+mostly syllabus pages mentioning GPAs. There are not results mention specifically
+on graduation or GPA to graduate. 
 
 Final Query Time: 83.1722
 
@@ -251,8 +255,8 @@ content from other types.
 
 Initial Query Time: 75.791
 
-Final Performance: The search returns more relevant pages but is hampered by access 
-issues to some faculty pages, showing a mix of progress and ongoing challenges.
+Final Performance: The search returns spot on results containing information on professors,
+with the top result redirecting user to a list of ICS professor page.
 
 Final Query Time: 45.4275
 
@@ -292,9 +296,8 @@ of 300 m/s which is not ideal.
 Initial Query Time: 432.0446 
 
 Final Performance: The same results were given. But the query time is reduced significantly.
-This may be because the search query now handles stopwords.
 
-Final Query Time: 248.4901 
+Final Query Time: 296.07
 
 22. Query: "There is nothing either good or bad but thinking makes it so"
 Initial Performance: Another Shakespearean quote that includes 10 stopwords. However,
@@ -304,9 +307,10 @@ The query time also exceeded 300 m/s.
 
 Initial Query Time: 335.0796
 
-Final Performance: Same results were given, but query time reduced significantly.
+Final Performance: Highly relevant results were given unlike before. The top result contains
+a pure text file of a book on that philosophy query.
 
-Final Query Time: 204.7846 
+Final Query Time: 222.7846 
 
 -----------------------------
 Code Improvements
@@ -318,11 +322,12 @@ indexing the text content without any advanced handling of document quality or r
 This led to a lack of sophistication in prioritizing documents, often resulting in 
 irrelevant or outdated content being highly ranked.
 
-Updated Code: We introduced mechanisms to handle duplicate content and improve the relevance 
-of indexed documents. Specifically, we implemented a hashing system to detect duplicate 
-documents based on content hashes, ensuring that only unique content was indexed. Additionally, 
-we enhanced our tokenizer to handle more complex text patterns, improving the 
-accuracy of our text analysis.
+Updated Code: We introduced mechanisms to handle duplicate content and improve the 
+relevance of indexed documents. Specifically, we implemented a hashing system to 
+detect duplicate documents based on content hashes, ensuring that only unique content 
+was indexed. Additionally, we enhanced our tokenizer to handle more complex text 
+patterns, improving the accuracy of our text analysis. This refactoring also reduced 
+the indexing time by optimizing data handling and enabling more efficient processing of documents.
 
 -----------------------------
 Advanced Ranking Algorithms:
@@ -342,8 +347,9 @@ Initial Code: There was minimal error handling in place, which often resulted in
 of error pages (e.g., 404s) in search results.
 
 Updated Code: Improved error detection mechanisms are now in place to exclude non-existent 
-pages from the index. Additionally, we implemented robust error handling throughout the indexing 
-process to prevent system crashes and ensure data integrity.
+pages from the index. Additionally, we implemented robust error handling throughout the 
+indexing process to prevent system crashes and ensure data integrity. The reduction in error 
+rates contributed to faster indexing times and more reliable query performance.
 
 -----------------------------
 Impact on Query Results
@@ -356,7 +362,8 @@ the search results are now more relevant and closely aligned with user queries.
 reduced the occurrence of irrelevant and outdated information in the search results.
 3. Authority: With the integration of HITS and PageRank, documents from authoritative sources are 
 ranked higher, which has improved the trustworthiness and quality of the information presented to users.
-
+4. Speed: Enhanced indexing algorithms and error handling have also led to quicker query 
+processing, reducing the average query response time.
 -----------------------------
 Conclusion
 -----------------------------
