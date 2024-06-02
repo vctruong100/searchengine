@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import json
-from transformers import BartTokenizer, BartForConditionalGeneration
+from transformers import pipeline
 from bs4 import BeautifulSoup
 from queue import PriorityQueue
 from lib.structs import *
@@ -16,9 +16,9 @@ SUM_DIR = "summary"
 PART_NAME = f"{SUM_DIR}/.part"
 SUMMARY_NAME = f"{SUM_DIR}/.summary"
 
-# Initialize the BART model and tokenizer
-tokenizer = BartTokenizer.from_pretrained('facebook/bart-large-cnn')
-model = BartForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
+# Initialize the summarization pipeline
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+
 
 def setup_dir():
     """Sets up the necessary directories for storing the index.
@@ -28,20 +28,9 @@ def setup_dir():
 
 def summarize_text(text):
     """Generates a summary for the provided text using the BART model."""
-    
-    # return_tensor='pt' returns PyTorch tensors
-    # max_length is set to 1024 to avoid truncation of long documents
-    # truncation=True truncates the input to the model's max length
-    inputs = tokenizer(text, return_tensors='pt', max_length=512, truncation=True)
-
-    # max_length is the maximum length of the generated summary
-    # min_length is the minimum length of the generated summary
-    # length_penalty adjusts the penalty for length in the beam search
-    # num_beams is the number of beams for beam search
-    # beam search generates multiple sequences and selects the best one
-    # early_stopping stops the beam search when all beams have reached the max length
-    summary_ids = model.generate(inputs['input_ids'], max_length=60, min_length=20, length_penalty=2.0, num_beams=1, early_stopping=True)
-    summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+    max_input_length = 512
+    truncated_text = text[:max_input_length]
+    summary = summarizer(truncated_text, max_length=60, min_length=20, length_penalty=2.0, num_beams=1, early_stopping=True)[0]['summary_text']
     return summary
 
 def write_partial_summary(index, summaries, partfh):
@@ -143,11 +132,12 @@ def merge_partial_summaries(partfh, merge_filename):
 
 def extract_text_from_html(html_content):
     """Extracts text from HTML content."""
-    soup = BeautifulSoup(html_content, 'html.parser')
-    return soup.get_text()
+    soup = BeautifulSoup(html_content, 'lxml')
+    text = soup.get_text()
+    cleaned_text = ' '.join(text.split())
+    return cleaned_text
 
 def process_directory(json_dir):
-    start_time = time.time()
     setup_dir()
 
     docid = 0
@@ -168,12 +158,18 @@ def process_directory(json_dir):
                         content = jsond.get('content', '').strip()
                         if content:
                             text = extract_text_from_html(content)
+
+                            start_time = time.time()
                             summary = summarize_text(text)
+
+                            print(f"Time elapsed for document {docid}: {time.time() - start_time:.2f} seconds")
                             summary_metadata[docid] = summary
                             print(f"Document {docid}: {summary}")
                             if partial_iter % partial_flush_period == 0 and summary_metadata:
+                                print(f"Flushing partial summary {partial_iter}...")
                                 write_partial_summary(summary_metadata, summary_metadata, partfh)
                                 summary_metadata.clear()
+                                print(f"Partial summary {partial_iter} flushed.")
                             partial_iter += 1
                 except Exception as e:
                     print(f"Failed to process {filename}: {e}")
