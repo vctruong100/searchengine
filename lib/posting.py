@@ -11,7 +11,7 @@ class Posting:
         self,
         docid=None,
         tf=None,
-        important=False
+        important=0,
     ):
         self.docid = docid
         self.tf = tf
@@ -33,7 +33,7 @@ def sposting_rd(fh):
     bits, _ = u32_rd(fh)
 
     # read fields from bits
-    important = bits & 1
+    important = bits & 0x0F
 
     return Posting(
         docid=docid,
@@ -49,7 +49,7 @@ def sposting_repr(obj):
     tf = obj.tf
     fields = obj.fields
     bits = (
-        fields['important'] << 0
+        fields['important'] << 0    # 4 bits
         | 1 << 31
     )
 

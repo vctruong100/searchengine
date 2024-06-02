@@ -59,7 +59,7 @@ def compute_scores(docid_postings, token_postings, query_vec):
 
     # compute tfidf
     # this also promotes TFIDF if the posting contains
-    # important text based on its tag
+    # important text - the multiplier varies by its tag
     num_docs = get_num_nonempty_documents()
     idfs = defaultdict(float)
     for token, postings in token_postings.items():
@@ -69,8 +69,7 @@ def compute_scores(docid_postings, token_postings, query_vec):
             document = get_document(posting.docid)
             tf = posting.tf / document.total_tokens
             tfidf = tf * idf
-            if posting.fields['important']:
-                tfidf *= importance[0]
+            tfidf *= importance[posting.fields['important']]
             doc_tfidfs[posting.docid][token] = tfidf
         idfs[token] = idf
 

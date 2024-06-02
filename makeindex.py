@@ -95,7 +95,6 @@ def make_partial(pagedir, partfh, partdoc):
         for file in files:
             # Periodically writes partial index to disk
             # if and only if docs is non-empty
-            # Note: This does not advance iterations if a flush is due
             if partial_iter % partial_flush_period == 0 and docs:
                 write_partial(inverted_index, docs, partfh, docfh, doclinksfh)
                 print(f"partial flush @ docID: {docid} ; pruned={pruned_docs}", flush=True)
@@ -150,7 +149,7 @@ def make_partial(pagedir, partfh, partdoc):
 
                 # soupify content
                 soup = BeautifulSoup(content, 'lxml')
-                important_tokens = set()
+                important_tokens = defaultdict(set)
 
                 # extract regular text
                 text = soup.get_text()
@@ -159,16 +158,20 @@ def make_partial(pagedir, partfh, partdoc):
 
                 # extract important text
                 #
-                # bold text, headings up to h4 (h4 is similar to bold)
+                # titles, bold text, headings up to h4
+                # (h4 is similar to bold)
                 # and mark (highlighted) text
-                important_tags = soup.find_all([
-                    'h1', 'h2', 'h3', 'h4',
-                    'b', 'strong', 'mark', 'title',
-                ])
-                for itag in important_tags:
-                    important_text = itag.get_text()
-                    important_tokens.update(tokenize(important_text, n=1)[0])
-                    important_text = "" # possibly free up memory
+                important_tags = [
+                    ('title',1), ('h1',2), ('h2',3), ('h3',4),
+                    ('h4',5), ('b',6), ('strong',7), ('mark',8),
+                ]
+                for tag, _ in important_tags:
+                    tag_soup = soup.find_all(tag)
+                    for e in tag_soup:
+                        e_text = e.get_text()
+                        important_tokens[tag].update(tokenize(e_text, n=1)[0])
+                        e_text = "" # possibly free up memory
+                    tag_soup.decompose() # free up memory from soup
 
                 # extract links
                 #
@@ -209,9 +212,9 @@ def make_partial(pagedir, partfh, partdoc):
                 if len(similar_hashes) > max_similar_hashes:
                     similar_hashes.popleft() # remove oldest sim hash if too many
 
+
                 ### Populate postings and documents
                 ### if and only if the page is not a duplicate (exact, similar)
-
 
                 # manipulate tokens
                 extend_tokens_from_ngrams(tokens, ngrams_col)
@@ -223,11 +226,19 @@ def make_partial(pagedir, partfh, partdoc):
 
                 # Iterate over each token and its count and add a Posting to the inverted index
                 for token, count in token_counts.items():
-                    # tf = term frequency of each individual token
+                    # determine whether token is important
+                    # tags ordered first are prioritized
+                    important = 0
+                    for tag, val in important_tags:
+                        if token in important_tokens[tag]:
+                            importance = val
+                            break
+
+                    # tf = term frequency for each individual token
                     posting = Posting(
                         docid=docid,
                         tf=count,
-                        important=token in important_tokens,
+                        important=important,
                     )
                     inverted_index[token].append(posting)
 
