@@ -16,6 +16,8 @@ from lib.indexfiles import *
 from lib.tokenize import *
 import lib.queryproc as queryproc
 
+USAGE_MSG = "usage: python searcht.py"
+
 def run_server():
     """Runs the server as a long running process
     that constantly accepts user input (from the local machine).
@@ -26,9 +28,11 @@ def run_server():
         if not query:
             continue
 
+        print("-" * 50)
         start_time = time.time_ns()  # Start timing using time_ns() for higher precision
         result = queryproc.process_query(query)
         end_time = time.time_ns()  # End timing
+        print("-" * 50)
 
         print(f"Number of results: {len(result)}")
         for result in queryproc.format_results_tty(result, 5):
@@ -36,8 +40,8 @@ def run_server():
 
         query_time = (end_time - start_time) / 1_000_000  # Convert nanoseconds to milliseconds
         print(f"Query time: {query_time:.2f} milliseconds")
+        print(f"{'-' * 50}\n\n")
 
-USAGE_MSG = "usage: python searcht.py"
 
 if __name__ == "__main__":
     if len(sys.argv) != 1:
