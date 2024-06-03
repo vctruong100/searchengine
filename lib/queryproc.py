@@ -116,7 +116,6 @@ def compute_scores(docid_postings, token_postings, query_vec):
             if doc_cosine_norm else 0.0)
         net_relevance[docid] = (tfidf_factor * normalized_tfidf
             + cosine_factor * normalized_cosine) if doc_cosine[docid] > 0.4 else 0.0
-        print(docid, doc_cosine[docid], normalized_cosine)
 
 
     ### compute quality ###
@@ -242,7 +241,7 @@ def process_query(query):
     et3 = time.time()
 
     print('tokenize', et-tt)
-    print('stopwords', et2-tt2)
+    print('preprocessing', et2-tt2)
     print('postings', et3-tt3)
 
     if not docid_postings:
@@ -277,8 +276,6 @@ def format_results_tty(result, k):
     """
     results = []
     for rank, (docid, score) in enumerate(result[:k], 1):
-        if score <= 0.01:
-            break # score is too low
         document = get_document(docid)
         url = document.url if document.url else "URL not found"
         result = f'Rank {rank}: {url} (Score: {score:.2f})'
@@ -293,8 +290,6 @@ def format_results_web(result, k, SUMMARY_NAME):
     # Format output to include rankings, URLS, and scores
     results = []
     for rank, (docid, score) in enumerate(result[:k], 1):
-        if score <= 0.01:
-            break # score is too low
         document = get_document(docid)
         url = document.url if document.url else "URL not found"
         summary = get_summary(docid)
@@ -304,3 +299,4 @@ def format_results_web(result, k, SUMMARY_NAME):
             f'{rank}. <a href="{url}" target="_blank">{url}</a> (Score: {score:.2f})<br>Summary: {summary}'
         )
     return results
+
