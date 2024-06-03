@@ -3,6 +3,7 @@ Search engine
 
 A Python-based search engine designed to index web pages, compute PageRank and HITS scores, and process user queries.
 
+
 Dependencies
 ------------
 To install dependencies, run the following command:
@@ -11,6 +12,7 @@ or
 ``pip install -r requirements.txt``
 
 You might need to add the ``--user`` flag if you do not have the permissions.
+
 
 Building the Index
 ------------------
@@ -35,10 +37,14 @@ on their link structures and content relevance. If you choose not to run compute
 the system will rank search results based on textual relevancy or cosine
 similarity by default.
 
+
 Running the Search Engine
 -------------------------
 To start the search engine with Web GUI and begin processing local user queries, use:
 ``python search.py``
+
+You can run queries by typing into the box and clicking the "Search" button.
+
 Note: Using the Web GUI will slightly decrease the query speed.
 
 To not use the Web GUI, execute:
@@ -47,6 +53,10 @@ To not use the Web GUI, execute:
 This command launches a local server that allows real-time searching of the indexed documents.
 The server calculates net relevance scores for each query, using the previously
 computed PageRank and HITS scores along with textual relevance derived from the query.
+
+You will be prompted to enter your query to search. This runs indefinitely until you interrupt
+the program using CTRL+C (keyboard interrupt).
+
 
 Summarizer
 ----------
@@ -63,3 +73,4 @@ This script extracts text from HTML, summarizes it, and writes the results direc
 file. It's designed to operate efficiently with considerable runtime per document. Then,
 when running the search engine again (with Web GUI -- ``search.py``), the engine will
 provide a summary for each of the result.
+
