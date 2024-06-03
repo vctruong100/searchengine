@@ -20,8 +20,8 @@ mixed with a static quality score per document, which is
 computed as a mix of PageRank and HITS scores.
 
 To improve query times, we used a cache on postings retrieval
-to avoid expensive disk reads and pruned stopwords in our queries
-where necessary (that is if there were too many stopwords or
+to avoid expensive disk reads and pruned stop-words in our queries
+where necessary (that is if there were too many stop-words or
 too little).
 
 
@@ -113,7 +113,7 @@ final
     - performance:  There is a noticeable difference in time possibly
                     from our postings cache retrieval, which improves
                     for subsequent queries. The results remain similar
-                    too with even diferent references such as Intro to Data
+                    too with even different references such as Intro to Data
                     Management class under thornton's ICS 184.
 
 
@@ -135,7 +135,7 @@ final
                     the pruning of binary search tree pages possibly
                     from similarity detection. In exchange, we see
                     comparison based sorting which is closely related to
-                    biinary trees.
+                    binary trees.
 
 
 [ 6 ]
@@ -195,7 +195,7 @@ query: "assignment 1 cs 121"
 initial
     - time: 15.72 ms
     - performance:  Query shows results related to CS 121 / INF 141, which is
-                    as expected to the user. It also shows info on assigments /
+                    as expected to the user. It also shows info on assignments /
                     HW which is not too dissimilar from what the user wanted.
 
 final
@@ -220,7 +220,7 @@ final
                     retrievals. At the same time our changes minimally
                     affected the results, as they are roughly the same
                     (both contain China trips and returning from long break).
-                    Also the stopword is pruned which increases
+                    Also the stop-word is pruned which increases
                     performance.
 
 
@@ -230,17 +230,17 @@ query: "to be or not to be that is the question"
 initial
     - time: 416.77ms
     - performance:  Our query engine struggles to process
-                    many stopwords at a time, which meant
+                    many stop-words at a time, which meant
                     the query time exceeded past our allowed time.
 
 final
     - time: 266.48 ms -> 34.13 ms
-    - performance:  We made changes to how we parse stopwords
-                    by selecting only a few stopwords, namely
-                    the stopwords that were least frequent.
+    - performance:  We made changes to how we parse stop-words
+                    by selecting only a few stop-words, namely
+                    the stop-words that were least frequent.
 
                     The cache on postings retrievals also
-                    makes subsequent queries on stopwords fast.
+                    makes subsequent queries on stop-words fast.
                     The time improvement from using the cache is
                     denoted by the right arrow.
 
@@ -251,7 +251,7 @@ query: "Ics"
 initial
     - time: 84.31ms
     - performance:  Our queries mostly returned results from
-                    irani's 6B and 6D pages, which is perhap
+                    irani's 6B and 6D pages, which is perhaps
                     too focused for our broad query.
 
 final
@@ -267,7 +267,7 @@ query: "mondego"
 
 initial
     - time: 1.08ms
-    - performane:   The results does not show mondego at the top of the
+    - performance:   The results does not show mondego at the top of the
                     rankings, only as the 4th result. In fact, a news
                     site congratulating mondego is shown at the top.
 
@@ -337,7 +337,7 @@ final
 
                     Duplicate detection helped us achieve these
                     results along with static quality scoring
-                    from pagerank / HITS.
+                    from PageRank / HITS.
 
 
 [ 17 ]
@@ -362,14 +362,14 @@ final
 
                     Duplicate documents have been pruned significantly,
                     and the use of important tags within postings paired
-                    with the query pre-processing away many stopwords has
+                    with the query pre-processing away many stop-words has
                     improved the relevance of the search results.
 
                     Query time is greatly improved despite the high
-                    number of stopwords. This is achieved with a cache
+                    number of stop-words. This is achieved with a cache
                     on Postings retrieval. While an initial query
                     might be slow, subsequent queries on the same
-                    stopwords will be much faster.
+                    stop-words will be much faster.
 
 
 [ 18 ]
@@ -387,7 +387,7 @@ final
     - performance:  With the integration of PageRank and HITS scores, 
                     along with better handling of technical and specific 
                     terms through cosine similarity and TF-IDF adjustments, 
-                    the search now ranks the ICS ugrad page of academic dishonesty
+                    the search now ranks the ICS page of academic dishonesty
                     at the top.
 
                     The pages in the previous query appear possibly because it
@@ -401,7 +401,7 @@ query: "cheating policy"
 
 initial
     - time: 21.96ms
-    - performance:  The query yields mostly irrevlant results. The initial 
+    - performance:  The query yields mostly irrelevant results. The initial 
                     four results are off-target, yet the fifth result 
                     is notable, featuring a document that contains information
                     on computer disciplinary procedures (seems related to cheating).
