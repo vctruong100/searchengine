@@ -220,11 +220,11 @@ def process_query(query):
         return []
 
     # if unique stopwords are insignificant, prune the stopwords
-    # otherwise, consider the first k+1 unique stopwords that are least
+    # otherwise, consider the first k unique stopwords that are least
     # frequently represented in docs (but are represented)
     # where k = log2(number of stopwords)
-    if len(stopwords) > 0 and not (len(stopwords) < num_valid_tokens * 0.3):
-        k = 1 + int(math.log2(len(stopwords)))
+    if len(stopwords) > 0 and not (len(stopwords) < num_valid_tokens * 0.4):
+        k = int(math.log2(len(stopwords)))
         for _ in range(k):
             _, freq, token = heapq.heappop(stopwords_heap)
             frequencies[token] = freq
