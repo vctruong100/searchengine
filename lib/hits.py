@@ -12,7 +12,7 @@ def initialize_scores(docs):
     authority_scores = {doc.docid: 1 for doc in docs}
     return hub_scores, authority_scores
 
-def hits_algorithm(docs, max_iter=5, tol=1e-6):
+def hits_algorithm(docs, max_iter=25, tol=1e-6):
     """Calculate HITS scores for documents.
 
     :param docs: List of Document objects
