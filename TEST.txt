@@ -311,7 +311,7 @@ initial
                     contents for some pages, etc.
 
 final
-    - time: 0.00ms
+    - time: 11.5182ms
     - performance:  After refining the indexing process and applying 
                     advanced ranking algorithms like PageRank and HITS, 
                     the search results now focus more on high-quality 
