@@ -1,7 +1,7 @@
 Test Queries Evaluation Report
 -----------------------------
 This report provides a comprehensive analysis of the effectiveness of our search engine's 
-indexing and ranking algorithms across a series of 21 test queries. It details the 
+indexing and ranking algorithms across a series of 22 test queries. It details the 
 initial performance benchmarks and the enhancements achieved through the integration 
 of sophisticated ranking mechanisms like cosine similarity, HITS, and PageRank. 
 These algorithms were pivotal in refining our system's ability to compute 
@@ -15,7 +15,6 @@ Our primary improvements were focused on refining our indexing process and integ
 sophisticated ranking algorithms. The initial implementation was basic and did not account 
 for important SEO factors such as backlinks and content relevance through sophisticated 
 algorithms like HITS and PageRank.
-
 
 Query Performance Analysis
 -----------------------------
@@ -286,7 +285,7 @@ expectation perfectly.
 Final Query Time: 27.048
 
 21. Query: "It is not in the stars to hold our destiny but in ourselves"
-Initial Performance: This query includes 9 stopwords: "it", "is", "not", "in", "the", 
+Initial Performance: This query includes 9 stop-words: "it", "is", "not", "in", "the", 
 "to", "our", "but", "in". It tests how well the search engine identifies and interprets 
 significant words amidst common connectors and fillers. Three results were given; while 
 the documents have mid-level scores, none seem directly relevant to the philosophical 
@@ -300,7 +299,7 @@ Final Performance: The same results were given. But the query time is reduced si
 Final Query Time: 296.07
 
 22. Query: "There is nothing either good or bad but thinking makes it so"
-Initial Performance: Another Shakespearean quote that includes 10 stopwords. However,
+Initial Performance: Another Shakespearean quote that includes 10 stop-words. However,
 unlike the previous query, this quote a lot more broad results. More results were given,
 but none seem directly relevant to the philosophical or literary analysis of the query.
 The query time also exceeded 300 m/s.
@@ -311,6 +310,99 @@ Final Performance: Highly relevant results were given unlike before. The top res
 a pure text file of a book on that philosophy query.
 
 Final Query Time: 222.7846 
+
+23. Query: "uci"
+Initial Performance:  This query, targeting a broad spectrum of content related to the 
+University of California, Irvine, originally produced results that were somewhat general, 
+capturing various aspects of the university but often lacking depth in specific academic 
+or departmental areas.
+
+Initial Query Time: 11.999 
+
+Final Performance: After the improvements, results are now more targeted, 
+directly linking to relevant academic and departmental information specific to user 
+interests within UCI. The implementation of content-specific ranking factors and improved 
+recognition of the 'uci' context has led to more relevant academic content being prioritized, 
+which is crucial for prospective and current students or staff seeking specific 
+university resources.
+
+Final Query Time: 124.0512 
+
+24. Query: "ics"
+Initial Performance: Initially, results for this query were reasonably targeted towards 
+the Information and Computer Sciences (ICS) department, but they often included redundant 
+listings of the same courses offered in different semesters or years, diluting 
+the effectiveness of the search.
+
+Initial Query Time: 10.9998 
+
+Final Performance: Improved to show a more focused selection of links pertaining to 
+specific programs within the School of Information and Computer Sciences. The system's 
+enhanced ability to discern between general and specific content about 'ICS' has improved 
+the relevance of the search results, making it more useful for users interested in 
+detailed academic program information.
+
+Final Query Time: 103.2356
+
+25. Query: "thornton ics 33"
+Initial Performance: This query was quite effective from the start, providing 
+highly relevant results for Professor Thornton's ICS 33 course, including course 
+guides, syllabi, and related academic materials without significant issues of 
+duplication or irrelevance.
+
+Initial Query Time: 8.0 
+
+Final Performance: Results now effectively highlight resources directly associated 
+with Professor Thornton’s courses, such as lecture notes, course syllabi, and specific 
+educational materials. This improvement is attributed to the system's refined ability 
+to associate professor names with course codes, enhancing the specificity of search results.
+
+Final Query Time: 5.0
+
+26. Query: "pattis notes"
+Initial Performance:  The search initially returned a variety of results related to 
+courses taught by Professor Pattis, showcasing a broad array of his lecture notes and 
+related educational materials. The diversity in content reflected a comprehensive 
+indexing of Pattis's teaching materials.
+
+Initial Query Time: 21.9999  
+
+Final Performance: The search now leads directly to Professor Pattis' 
+lecture notes and related educational materials. This targeted approach is 
+beneficial for students and educators looking for specific instructional content, 
+demonstrating the system’s improved handling of faculty-related queries.
+
+Final Query Time: 8.2887
+
+27. Query: "cheating"
+Initial Performance: Initial results primarily focused on documentation and 
+records of policy changes within the academic context, lacking direct answers 
+or specific policy details regarding academic dishonesty, definitions of cheating, 
+or the consequences thereof. 
+
+Initial Query Time:
+
+Final Performance: Focused enhancement in results concerning academic integrity 
+and cheating policies. The search now effectively identifies and presents policy 
+documents, articles on academic honesty, and related educational resources, 
+demonstrating an increased capability to handle queries related to university policies 
+and student conduct.
+
+Final Query Time: 16.9993 
+
+28. Query: "informatics"
+Initial Performance: The initial results were somewhat scattered, providing general 
+information about the Informatics department and its faculty but not specifically 
+addressing what the field of Informatics entails or detailed information about the major.
+
+Initial Query Time: 46.9989
+
+Final Performance: Now sharply focuses on informatics-specific educational resources, 
+faculty publications, and departmental information. This precision in retrieving targeted 
+academic content shows the system’s capability to differentiate and prioritize 
+domain-specific information effectively.
+
+Final Query Time: 72.5097 
 
 -----------------------------
 Code Improvements
@@ -341,15 +433,27 @@ web’s link structure. This not only improved the relevance of the search resul
 also prioritized authoritative sources, thus enhancing the overall user experience.
 
 -----------------------------
-Error Handling and Data Integrity:
+Summarization Integration:
 
-Initial Code: There was minimal error handling in place, which often resulted in the inclusion 
-of error pages (e.g., 404s) in search results.
+To enhance the presentation of search results and provide a quicker grasp of the document’s 
+content, we integrated a summarization feature using the BART model. This tool generates brief 
+summaries for each indexed document, which are displayed alongside the search results. 
+This feature is particularly useful in helping users decide which links to follow based 
+on a quick assessment of content relevance.
 
-Updated Code: Improved error detection mechanisms are now in place to exclude non-existent 
-pages from the index. Additionally, we implemented robust error handling throughout the 
-indexing process to prevent system crashes and ensure data integrity. The reduction in error 
-rates contributed to faster indexing times and more reliable query performance.
+-----------------------------
+Query Time Improvements:
+
+Disk I/O: To address slow posting list reads from disk, we implemented a least recently 
+used (LRU) caching mechanism, which has significantly sped up the query process.
+
+Stop-word Handling: Our initial approach inefficiently processed stop-words, adding unnecessary 
+bulk to search queries. We now employ a dynamic stop-word filtering mechanism. If the query 
+contains a high number of stop-words, all are pruned; otherwise, only the least frequently used are considered.
+
+Scoring Adjustments: It's important to note the balancing act between tf-idf and cosine similarity, 
+ensuring that only similar results are retained. Additionally, the incorporation of PageRank and 
+authority metrics from the HITS algorithm further refines our search results' relevance and quality.
 
 -----------------------------
 Impact on Query Results
@@ -364,6 +468,7 @@ reduced the occurrence of irrelevant and outdated information in the search resu
 ranked higher, which has improved the trustworthiness and quality of the information presented to users.
 4. Speed: Enhanced indexing algorithms and error handling have also led to quicker query 
 processing, reducing the average query response time.
+
 -----------------------------
 Conclusion
 -----------------------------
