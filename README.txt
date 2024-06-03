@@ -57,13 +57,14 @@ computed PageRank and HITS scores along with textual relevance derived from the 
 You will be prompted to enter your query to search. This runs indefinitely until you interrupt
 the program using CTRL+C (keyboard interrupt).
 
-
 Summarizer
 ----------
 The `summarizer.py` script processes HTML content from JSON files to generate summaries
 using the BART model.
-**Warning:** The setup may take some time, and summarizing each document can be
-time-consuming due to the computational requirements of the model.
+**Warning:** The processor will take a tremendous amount of time to summarize ALL documents
+(approximately 20-40 hours). Run at your own risk. Summaries will NOT affect the query time.
+You can stop the script at any time with CTRL+C (keyboard interrupt), but the summary 
+file will be incomplete.
 Model: https://huggingface.co/facebook/bart-large-cnn
 
 To run the summarizer, execute:
@@ -71,6 +72,7 @@ python summarizer.py path/to/pages
 
 This script extracts text from HTML, summarizes it, and writes the results directly to a
 file. It's designed to operate efficiently with considerable runtime per document. Then,
-when running the search engine again (with Web GUI -- ``search.py``), the engine will
-provide a summary for each of the result.
+when running the search engine (with Web GUI -- ``search.py``), the engine will
+provide a summary for each of the result. If chosen not to run the summarizer, the search
+engine (search.py) will provide no summary.
 
