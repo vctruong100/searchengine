@@ -38,10 +38,14 @@ to find quick information related to the query using a few keywords
 (not necessarily ordered). The URL had to be a good authority pages
 but also a hub page to link to other resources if necessary.
 
+We provide an explanation for each query on what factors contributed
+to its improvement, especially for the last 10 queries.
+
 Each query is divided by a set of brackets [ ] with a number.
 
 Note: The first 10 queries that performed well in M2.
 The last 10 queries performed poorly in M2.
+For each query, we only evaluate based on the top 5 results.
 
 
 [ 1 ]
@@ -354,70 +358,95 @@ final
     - performance:  After refining the indexing process and applying 
                     advanced ranking algorithms like PageRank and HITS, 
                     the search results now focus more on high-quality 
-                    academic and research-oriented pages. Duplicate 
-                    documents have been pruned significantly, and the 
-                    use of important tags within postings has improved 
-                    the relevance of the search results. 
+                    academic and research-oriented pages.
+
+                    Duplicate documents have been pruned significantly,
+                    and the use of important tags within postings paired
+                    with the query pre-processing away many stopwords has
+                    improved the relevance of the search results.
+
+                    Query time is greatly improved despite the high
+                    number of stopwords. This is achieved with a cache
+                    on Postings retrieval. While an initial query
+                    might be slow, subsequent queries on the same
+                    stopwords will be much faster.
+
 
 [ 18 ]
-query: "Error Code: 0xC1900210"
+query: "academic dishonesty"
 
 initial
-    - time: 6.6042ms
-    - performance:  Although the query is specific, it does not 
-                    successfully retrieve results for the designated 
-                    error code. Instead, it produces unrelated error 
-                    information, making the results irrelevant.
+    - time: 38.39ms
+    - performance:  The results from this query show seemingly unrelated
+                    pages / URLs about academic dishonesty while the
+                    actual page on academic dishonesty policies is at
+                    the bottom of the ranking (ranked 5).
 
 final
-    - time: 10.1134ms
+    - time: 4.11ms
     - performance:  With the integration of PageRank and HITS scores, 
                     along with better handling of technical and specific 
                     terms through cosine similarity and TF-IDF adjustments, 
-                    the search now accurately retrieves documents 
-                    specifically related to the error code. This includes 
-                    technical support content and troubleshooting guides, 
-                    enhancing the relevance and utility of the results.
+                    the search now ranks the ICS ugrad page of academic dishonesty
+                    at the top.
+
+                    The pages in the previous query appear possibly because it
+                    includes "academic" and "dishonesty", but are mostly pruned
+                    due to duplicate detection, which also contributes to
+                    improved query times.
 
 
 [ 19 ]
-query: "Random words without sense or meaning"
+query: "cheating policy"
 
 initial
-    - time: 56.4514ms
-    - performance:  The query yields mixed outcomes. The initial 
-                    two results are off-target, yet the third result 
-                    is notable, featuring a document that contains an 
-                    extensive compilation of words or characters. The
-                    rest fail to achieve the same outcome.
+    - time: 21.96ms
+    - performance:  The query yields mostly irrevlant results. The initial 
+                    four results are off-target, yet the fifth result 
+                    is notable, featuring a document that contains information
+                    on computer disciplinary procedures (seems related to cheating).
 
 final
-    - time: 24.4754ms
-    - performance:  Enhanced filtering and prioritization through 
-                    adjusted ranking algorithms now dismiss irrelevant 
-                    content faster, reducing query time. The updated 
-                    search better manages nonsensical input by filtering 
-                    out noise and focusing on potentially meaningful
-                    content, even when presented with random words.
+    - time: 7.22ms
+    - performance:  The query now presents academic dishonesty policies at the top,
+                    which is certainly related to cheating policy. Additionally,
+                    policies on computer disciplinary procedures (from the last query)
+                    appear second on the ranking, which suggests our changes were
+                    effective.
+
+                    Our changes can be attributed by cosine similarity to emphasize
+                    pages that are closely connected to "cheating policy" and importance
+                    multipliers. Quality scores from PageRank and HITS also helped
+                    push the pages up the ranking.
 
 
 [ 20 ]
-query: "what is computer science"
+query: "big O notation"
 
 initial
-    - time: 100.4972ms
-    - performance:  The result query fails to provide answer to the 
-                    query question and instead provide irrelevant pages 
-                    like publications and text files.
+    - time: 9.95ms
+    - performance:  The results from the query fails to return any meaningful
+                    information about Big O notation. In fact, each of the pages
+                    appear to sparsely contain the terms "big" and "notation"
+                    instead of "big O notation" in some form. None of the pages
+                    appear relevant to algorithms (which is closely connected
+                    to big O notation).
 
 final
-    - time: 86.5675ms
-    - performance:  The refined search results now prominently feature 
-                    educational resources, departmental websites, and 
-                    introductory articles about computer science. 
-                    Improvements in document relevance through enhanced 
-                    use of PageRank and HITS scores, along with the 
-                    promotion of important textual content, have yielded 
-                    more pertinent results that directly address the 
-                    query's intent.
+    - time: 2.22ms
+    - performance:  The results now correctly show the top pages containing
+                    information about big O notation. For example, eppstein's 161
+                    introduction to the analysis of algorithms contain big O.
+                    Another example: pattis's ICS 46 lecture notes contain
+                    big O somewhere.
+
+                    We attribute the improvement to increasing the cosine
+                    similarity factor which seems to better account for
+                    each of the terms in the query, as such pages that
+                    are highly similar are highly likely to contain
+                    "big" and "O" together.
+
+                    Side note: performance improved greatly possibly from
+                    cached postings retrieval.
+
 
