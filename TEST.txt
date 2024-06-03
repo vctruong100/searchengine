@@ -33,6 +33,11 @@ as a basis.
 We use 10 good, 10 bad queries from M2 to evaluate the search
 engine performance.
 
+We mostly evaluated the search engine based on a student trying
+to find quick information related to the query using a few keywords
+(not necessarily ordered). The URL had to be a good authority pages
+but also a hub page to link to other resources if necessary.
+
 Each query is divided by a set of brackets [ ] with a number.
 
 Note: The first 10 queries that performed well in M2.
@@ -110,75 +115,109 @@ final
 
 
 [ 5 ]
-query: ""
+query: "binary tree ics 46"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 37.69ms
+    - performance:  The query returns relevant results on binary trees
+                    such as BSTs and AVL trees from thornton's ICS 46 offering
+                    which is expected.
 
 final
-    - time: 0.00ms
-    - performance:  test
+    - time: 4.39ms
+    - performance:  The query time is greatly improved as a result
+                    of previous cached queries. Additionally, the query
+                    remains the same with one notable exception being
+                    the pruning of binary search tree pages possibly
+                    from similarity detection. In exchange, we see
+                    comparison based sorting which is closely related to
+                    biinary trees.
 
 
 [ 6 ]
-query: ""
+query: "eppstein graph"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 37.85ms
+    - performance:  Results are closely related to eppstein and graph since
+                    it includes eppstein's geometry notes (which is graphic-related),
+                    his graph algorithms publications, and graph drawing software.
 
 final
-    - time: 0.00ms
-    - performance:  test
+    - time: 10.59ms
+    - performance:  Query time is much better than the previous engine
+                    while at the same time providing the same results
+                    from the initial query.
 
 
 [ 7 ]
-query: ""
+query: "python is a dynamically typed language"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 62.57ms
+    - performance:  Queries mention Python type annotations, which is fairly close
+                    to our original query. Additionally, several of the pages
+                    reference Python and info related to how Python handles types.
 
 final
-    - time: 0.00ms
-    - performance:  test
+    - time: 16.12ms
+    - performance:  We see greatly improved performance in this query as a
+                    result of the cached Postings. Additionally, the query remains
+                    almost identical with one small caveat being a reference to
+                    iftekha's home page. Since there is relevant pages from the 2nd
+                    result downwards, this isn't a big deal.
 
 
 [ 8 ]
-query: ""
+query: "candy store"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 15.66ms
+    - performance:  The query showcases several pictures from eppstein on his
+                    candy store hike, which is closely related to the query.
 
 final
-    - time: 0.00ms
-    - performance:  test
+    - time: 4.93ms
+    - performance:  In addition to better performance from cached postings
+                    retrieval, the results remain virtually identical
+                    with different yet connected pages appearing at the top
+                    instead, which shows that the changes minimally affected
+                    the results.
 
 
 [ 9 ]
-query: ""
+query: "assignment 1 cs 121"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 15.72 ms
+    - performance:  Query shows results related to CS 121 / INF 141, which is
+                    as expected to the user. It also shows info on assigments /
+                    HW which is not too dissimilar from what the user wanted.
 
 final
-    - time: 0.00ms
-    - performance:  test
+    - time: 13.65ms
+    - performance:  Query remains roughly the same with information about
+                    CS 121 / INF 141 appearing at the top, including HW info.
+                    This shows that our changes had minimal impact.
 
 
 [ 10 ]
-query: ""
+query: "welcome to china"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 15.60ms
+    - performance:  Query shows several URLs related to China trips and
+                    returning from a long break possibly from the welcome
+                    term. It seems to be as expected.
 
 final
-    - time: 0.00ms
-    - performance:  test
+    - time: 2.19ms
+    - performance:  Performance is greatly improved by caching Posting
+                    retrievals. At the same time our changes minimally
+                    affected the results, as they are roughly the same
+                    (both contain China trips and returning from long break).
+                    Also the stopword is pruned which increases
+                    performance.
 
 
 [ 11 ]
@@ -208,7 +247,7 @@ query: "Ics"
 initial
     - time: 84.31ms
     - performance:  Our queries mostly returned results from
-                    irani's 6B and 6D pages, which is perhaps
+                    irani's 6B and 6D pages, which is perhap
                     too focused for our broad query.
 
 final
@@ -226,7 +265,7 @@ initial
     - time: 1.08ms
     - performane:   The results does not show mondego at the top of the
                     rankings, only as the 4th result. In fact, a news
-                    site congratulating mondego is shown at the top
+                    site congratulating mondego is shown at the top.
 
 final
     - time: 1.39ms
