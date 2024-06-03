@@ -298,49 +298,87 @@ final
 
 
 [ 17 ]
-query: ""
+query: "The way that something is done in a particular area of study at a place 
+where people do research and study"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 425.7808ms
+    - performance:  This query is overly wordy and filled with 
+                    common words and phrases that add little 
+                    value to the search intent. The result of the 
+                    query contains many duplicates and not many useful 
+                    results, such as catalogue of books, table of 
+                    contents for some pages, etc.
 
 final
     - time: 0.00ms
-    - performance:  test
-
+    - performance:  After refining the indexing process and applying 
+                    advanced ranking algorithms like PageRank and HITS, 
+                    the search results now focus more on high-quality 
+                    academic and research-oriented pages. Duplicate 
+                    documents have been pruned significantly, and the 
+                    use of important tags within postings has improved 
+                    the relevance of the search results. 
 
 [ 18 ]
-query: ""
+query: "Error Code: 0xC1900210"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 6.6042ms
+    - performance:  Although the query is specific, it does not 
+                    successfully retrieve results for the designated 
+                    error code. Instead, it produces unrelated error 
+                    information, making the results irrelevant.
 
 final
-    - time: 0.00ms
-    - performance:  test
+    - time: 10.1134ms
+    - performance:  With the integration of PageRank and HITS scores, 
+                    along with better handling of technical and specific 
+                    terms through cosine similarity and TF-IDF adjustments, 
+                    the search now accurately retrieves documents 
+                    specifically related to the error code. This includes 
+                    technical support content and troubleshooting guides, 
+                    enhancing the relevance and utility of the results.
 
 
 [ 19 ]
-query: ""
+query: "Random words without sense or meaning"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 56.4514ms
+    - performance:  The query yields mixed outcomes. The initial 
+                    two results are off-target, yet the third result 
+                    is notable, featuring a document that contains an 
+                    extensive compilation of words or characters. The
+                    rest fail to achieve the same outcome.
 
 final
-    - time: 0.00ms
-    - performance:  test
+    - time: 24.4754ms
+    - performance:  Enhanced filtering and prioritization through 
+                    adjusted ranking algorithms now dismiss irrelevant 
+                    content faster, reducing query time. The updated 
+                    search better manages nonsensical input by filtering 
+                    out noise and focusing on potentially meaningful
+                    content, even when presented with random words.
 
 
 [ 20 ]
-query: ""
+query: "what is computer science"
 
 initial
-    - time: 0.00ms
-    - performance:  test
+    - time: 100.4972ms
+    - performance:  The result query fails to provide answer to the 
+                    query question and instead provide irrelevant pages 
+                    like publications and text files.
 
 final
-    - time: 0.00ms
-    - performance:  test
+    - time: 86.5675ms
+    - performance:  The refined search results now prominently feature 
+                    educational resources, departmental websites, and 
+                    introductory articles about computer science. 
+                    Improvements in document relevance through enhanced 
+                    use of PageRank and HITS scores, along with the 
+                    promotion of important textual content, have yielded 
+                    more pertinent results that directly address the 
+                    query's intent.
 
